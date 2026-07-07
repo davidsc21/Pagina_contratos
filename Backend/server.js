@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const pool = require("./Databases/db");
 const usuariosRoutes = require("./Routes/usuarios");
+const authRoutes = require("./Routes/auth");
 require("dotenv").config();
 
 const app = express();
@@ -10,9 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/usuarios", usuariosRoutes);
-/*app.get("/", (req, res) => {
-    res.send("Servidor funcionando 🚀");
-});*/
+app.use("/auth", authRoutes);
 
 app.get("/", async (req, res) => {
     try {

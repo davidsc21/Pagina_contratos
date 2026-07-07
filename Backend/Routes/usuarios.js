@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const pool = require("../Databases/db");
-const bcrypt = require("bcrypt");
 const {obtenerUsuarios} = require("../Controllers/usuariosController");
 const {crearUsuario} = require("../Controllers/usuariosController");
+const {validarCrearUsuario} = require("../Validators/usuariosValidator");
+const validarCampos = require("../middleware/validarCampos");
 
 router.get("/", obtenerUsuarios);
 
-router.post("/", crearUsuario);
+router.post("/", validarCrearUsuario, validarCampos, crearUsuario);
 
 module.exports = router;
