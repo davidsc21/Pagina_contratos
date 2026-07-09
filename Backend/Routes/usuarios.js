@@ -4,8 +4,9 @@ const {obtenerUsuarios} = require("../Controllers/usuariosController");
 const {crearUsuario} = require("../Controllers/usuariosController");
 const {validarCrearUsuario} = require("../Validators/usuariosValidator");
 const validarCampos = require("../middleware/validarCampos");
+const authMiddleware = require("../middleware/authMiddleware");
 
-router.get("/", obtenerUsuarios);
+router.get("/", authMiddleware, obtenerUsuarios);
 
 router.post("/", validarCrearUsuario, validarCampos, crearUsuario);
 
