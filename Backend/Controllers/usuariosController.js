@@ -1,4 +1,5 @@
 const pool = require("../Databases/db");
+const bcrypt = require("bcrypt");
 
 const obtenerUsuarios = async (req, res) =>  {
     try {
