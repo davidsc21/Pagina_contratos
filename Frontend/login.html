@@ -8,18 +8,49 @@
     
 </head>
 <body>
-    <div  class="container">
-        <div class="login-container">
-            <h1>Iniciar sesión</h1>
-            <div class="input-container">
-                <input placeholder="correo">
-                <input placeholder="contraseña">
-                <button>Iniciar sesión</button>
-            </div>
-        </div>
-        <div class="Decoration">
+    <div class="page">
 
-        </div>
+  <!-- LEFT: LOGIN FORM -->
+  <div class="left-panel">
+    <h1 class="title">Inicia Sesión</h1>
+
+    <form>
+      <div class="form-group">
+        <input type="email" placeholder="Correo" required>
+      </div>
+      <div class="form-group">
+        <input type="password" placeholder="Contraseña" required>
+      </div>
+      <button type="submit" class="btn-login">Iniciar Sesión</button>
+    </form>
+
+    <div class="logo">
+      <img src="./Media/palmas_logo.png" alt="logo">
     </div>
+  </div>
+
+  <!-- RIGHT: DECORATIVE GRAPHIC -->
+  <div class="right-panel">
+    <div class="card card-dark"></div>
+    <div class="card card-light"></div>
+
+    <div class="star star-1">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-0.7L12 2z"/>
+      </svg>
+    </div>
+    <div class="star star-2">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-0.7L12 2z"/>
+      </svg>
+    </div>
+    <div class="star star-3">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7.1L12 17.8l-6.2 3.5L7 14.2 2 9.3l7.1-0.7L12 2z"/>
+      </svg>
+    </div>
+  </div>
+
+</div>
 </body>
 </html>
