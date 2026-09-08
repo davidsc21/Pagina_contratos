@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contratos Palmas | Historial</title>
+    <link rel="stylesheet" href="./CSS/dashboard.css">
+</head>
+<body>
+    <div class="dashboard">
+
+        <!-- BARRA LATERAL -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="./Media/palmas_logo.png" alt="Logo Palmas">
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item">
+                    <span class="nav-icono">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3z"/></svg>
+                    </span>
+                    Inicio
+                </a>
+                <a href="crear-contrato.html" class="nav-item">
+                    <span class="nav-icono">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                    </span>
+                    Creación
+                </a>
+                <a href="historial.html" class="nav-item activo">
+                    <span class="nav-icono">&#9776;</span>
+                    Historial
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="btn-cerrar-sesion" class="btn-cerrar-sesion">Cerrar sesión</button>
+            </div>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="principal principal-historial">
+
+            <header class="encabezado">
+                <h1 class="titulo-pagina">Historial de contratos</h1>
+                <p class="subtitulo">Consulta todos los contratos registrados en detalle</p>
+            </header>
+
+            <section class="estadisticas">
+                <div class="tarjeta-estadistica">
+                    <span class="estadistica-valor" id="total-contratos">0</span>
+                    <span class="estadistica-nombre">Total de contratos</span>
+                </div>
+                <div class="tarjeta-estadistica">
+                    <span class="estadistica-valor" id="activos-contratos">0</span>
+                    <span class="estadistica-nombre">Activos</span>
+                </div>
+                <div class="tarjeta-estadistica">
+                    <span class="estadistica-valor" id="vencidos-contratos">0</span>
+                    <span class="estadistica-nombre">Vencidos</span>
+                </div>
+                <div class="tarjeta-estadistica">
+                    <span class="estadistica-valor" id="finalizados-contratos">0</span>
+                    <span class="estadistica-nombre">Finalizados</span>
+                </div>
+            </section>
+
+            <section class="historial historial-detallado">
+                <div class="historial-encabezado">
+                    <h2>Listado completo</h2>
+                </div>
+
+                <div class="herramientas">
+                    <input type="text" id="buscador" class="campo-busqueda" placeholder="Buscar contrato, cliente o estado...">
+                    <select id="filtro-estado" class="filtro-estado">
+                        <option value="">Todos los estados</option>
+                        <option value="Activo">Activo</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Vencido">Vencido</option>
+                        <option value="Finalizado">Finalizado</option>
+                    </select>
+                </div>
+
+                <div class="historial-tabla">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No. contrato</th>
+                                <th>Cliente</th>
+                                <th>Tipo de contrato</th>
+                                <th>Fecha de creación</th>
+                                <th>Fecha de vencimiento</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpo-contratos">
+                            <tr class="fila-vacia">
+                                <td colspan="8">Aún no hay contratos registrados</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="./JS/loginProteccion.js"></script>
+    <script src="./JS/historial.js"></script>
+</body>
+</html>

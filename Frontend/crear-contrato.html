@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contratos Palmas | Crear contrato</title>
+    <link rel="stylesheet" href="./CSS/dashboard.css">
+    <link rel="stylesheet" href="./CSS/crear.css">
+</head>
+<body>
+    <div class="dashboard">
+
+        <!-- BARRA LATERAL -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="./Media/palmas_logo.png" alt="Logo Palmas">
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item">
+                    <span class="nav-icono">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3z"/></svg>
+                    </span>
+                    Inicio
+                </a>
+                <a href="crear-contrato.html" class="nav-item activo">
+                    <span class="nav-icono">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                    </span>
+                    Creación
+                </a>
+                <a href="historial.html" class="nav-item">
+                    <span class="nav-icono">&#9776;</span>
+                    Historial
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="btn-cerrar-sesion" class="btn-cerrar-sesion">Cerrar sesión</button>
+            </div>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="principal principal-crear">
+
+            <header class="encabezado">
+                <h1 class="titulo-pagina">Crear contrato</h1>
+                <p class="subtitulo">Completa los pasos para registrar un nuevo contrato</p>
+            </header>
+
+            <!-- INDICADOR DE PASOS -->
+            <nav class="pasos" aria-label="Progreso">
+                <div class="paso via-paso paso-activo" id="paso-boton-1" data-paso="1">
+                    <span class="paso-numero">1</span>
+                    <span class="paso-nombre">Cliente</span>
+                </div>
+                <div class="paso-linea"></div>
+                <div class="paso via-paso" id="paso-boton-2" data-paso="2">
+                    <span class="paso-numero">2</span>
+                    <span class="paso-nombre">Datos del contrato</span>
+                </div>
+                <div class="paso-linea"></div>
+                <div class="paso via-paso" id="paso-boton-3" data-paso="3">
+                    <span class="paso-numero">3</span>
+                    <span class="paso-nombre">Revisión</span>
+                </div>
+            </nav>
+
+            <!-- PASO 1: BUSCAR CLIENTE -->
+            <section class="contenido-paso" id="paso-contenido-1">
+                <div class="panel">
+                    <h2 class="panel-titulo">Buscar cliente</h2>
+                    <p class="panel-descripcion">Escribe el nombre, documento o correo del cliente</p>
+
+                    <form id="formulario-busqueda" class="buscador-clientes">
+                        <input type="text" id="campo-busqueda" class="campo-busqueda-cliente"
+                               placeholder="Buscar cliente..." autocomplete="off">
+                        <button type="submit" class="btn-buscar">Buscar</button>
+                    </form>
+
+                    <div class="resultados-clientes" id="resultados-clientes"></div>
+                </div>
+
+                <div class="cliente-seleccionado" id="cliente-seleccionado" hidden>
+                    <div>
+                        <span class="etiqueta-seleccionado">Cliente seleccionado</span>
+                        <p class="cliente-seleccionado-nombre" id="cliente-seleccionado-nombre"></p>
+                    </div>
+                    <button type="button" class="btn-cambiar" id="btn-cambiar">Cambiar</button>
+                </div>
+
+                <div class="pie-paso">
+                    <button type="button" class="btn-continuar" id="btn-continuar" disabled>
+                        Continuar al paso 2
+                    </button>
+                </div>
+            </section>
+
+            <!-- PASO 2: DATOS DEL CONTRATO -->
+            <section class="contenido-paso" id="paso-contenido-2" hidden>
+                <div class="panel">
+                    <h2 class="panel-titulo">Datos del contrato</h2>
+                    <p class="panel-descripcion">Los campos de este paso se habilitarán próximamente</p>
+                    <div class="construccion">
+                        <span class="construccion-icono">&#9888;</span>
+                        <p>Esta sección está en construcción</p>
+                    </div>
+                </div>
+
+                <div class="pie-paso">
+                    <button type="button" class="btn-return" data-paso="1">&#8592; Volver</button>
+                    <button type="button" class="btn-continuar" data-paso="3">Continuar al paso 3</button>
+                </div>
+            </section>
+
+            <!-- PASO 3: REVISIÓN -->
+            <section class="contenido-paso" id="paso-contenido-3" hidden>
+                <div class="panel">
+                    <h2 class="panel-titulo">Revisión</h2>
+                    <p class="panel-descripcion">Aquí se resumirá el contrato antes de generarlo</p>
+                    <div class="construccion">
+                        <span class="construccion-icono">&#9888;</span>
+                        <p>Esta sección está en construcción</p>
+                    </div>
+                </div>
+
+                <div class="pie-paso">
+                    <button type="button" class="btn-return" data-paso="2">&#8592; Volver</button>
+                    <button type="button" class="btn-generar" id="btn-generar">Generar contrato</button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="./JS/loginProteccion.js"></script>
+    <script src="./JS/crear.js"></script>
+</body>
+</html>

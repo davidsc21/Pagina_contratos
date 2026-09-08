@@ -14,13 +14,14 @@
   <div class="left-panel">
     <h1 class="title">Inicia Sesión</h1>
 
-    <form>
+    <form id="login-form">
       <div class="form-group">
-        <input type="email" placeholder="Correo" required>
+        <input type="email" id="correo" placeholder="Correo" required>
       </div>
       <div class="form-group">
-        <input type="password" placeholder="Contraseña" required>
+        <input type="password" id="password" placeholder="Contraseña" required>
       </div>
+      <p id="mensaje"></p>
       <button type="submit" class="btn-login">Iniciar Sesión</button>
     </form>
 
@@ -52,5 +53,7 @@
   </div>
 
 </div>
+
+  <script src="./JS/login.js"></script>
 </body>
 </html>
