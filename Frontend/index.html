@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contratos Palmas | Inicio</title>
+    <title>Contratos Palmas</title>
     <link rel="stylesheet" href="./CSS/dashboard.css">
+    <link rel="stylesheet" href="./CSS/crear.css">
+    <link rel="stylesheet" href="./CSS/admin.css">
 </head>
 <body>
     <div class="dashboard">
@@ -16,21 +18,27 @@
             </div>
 
             <nav class="sidebar-nav">
-                <a href="index.html" class="nav-item activo">
+                <a href="#/inicio" class="nav-item" data-ruta="inicio">
                     <span class="nav-icono">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3z"/></svg>
                     </span>
                     Inicio
                 </a>
-                <a href="crear-contrato.html" class="nav-item">
+                <a href="#/crear" class="nav-item" data-ruta="crear">
                     <span class="nav-icono">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
                     </span>
                     Creación
                 </a>
-                <a href="historial.html" class="nav-item">
+                <a href="#/historial" class="nav-item" data-ruta="historial">
                     <span class="nav-icono">&#9776;</span>
                     Historial
+                </a>
+                <a href="#/admin" class="nav-item" data-ruta="admin" id="nav-admin" hidden>
+                    <span class="nav-icono">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/></svg>
+                    </span>
+                    Modificar datos
                 </a>
             </nav>
 
@@ -39,59 +47,13 @@
             </div>
         </aside>
 
-        <!-- CONTENIDO PRINCIPAL -->
-        <main class="principal">
+        <!-- CONTENIDO DINÁMICO -->
+        <main class="principal" id="contenido"></main>
 
-            <header class="encabezado">
-                <h1 class="saludo" id="saludo">Hola, <span id="nombre-usuario"></span></h1>
-                <p class="subtitulo">Bienvenido a Contratos Palmas</p>
-            </header>
-
-            <section class="acciones">
-                <a href="crear-contrato.html" class="tarjeta-accion">
-                    <span class="accion-icono">&#10010;</span>
-                    <h2>Crear contratos</h2>
-                    <p>Registra un nuevo contrato con los datos del cliente</p>
-                </a>
-                <a href="generar-contrato.html" class="tarjeta-accion">
-                    <span class="accion-icono">&#9881;</span>
-                    <h2>Generar contratos</h2>
-                    <p>Genera el documento final del contrato listo para firmar</p>
-                </a>
-            </section>
-
-            <section class="historial" id="historial">
-                <div class="historial-encabezado">
-                    <h2>Historial de contratos</h2>
-                    <div class="historial-acciones">
-                        <span class="contador" id="contador-contratos">0 contratos</span>
-                        <a href="historial.html" class="btn-ver-mas">Ver más</a>
-                    </div>
-                </div>
-
-                <div class="historial-tabla">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>No. contrato</th>
-                                <th>Cliente</th>
-                                <th>Fecha</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cuerpo-contratos">
-                            <tr class="fila-vacia">
-                                <td colspan="4">Aún no hay contratos registrados</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-        </main>
     </div>
 
-    <script src="./JS/loginProteccion.js"></script>
-    <script src="./JS/index.js"></script>
+    <div id="contenedor-toast" class="contenedor-toast"></div>
+
+    <script src="./JS/app.js"></script>
 </body>
 </html>

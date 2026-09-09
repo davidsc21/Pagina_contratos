@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
-    
+
     const token = req.headers.authorization;
     if (!token){
         return res.status(401).json({
@@ -9,11 +9,6 @@ const authMiddleware = (req, res, next) => {
         });
     }
     const tokenLimpio = token.split(" ")[1];
-
-    const decoded = jwt.verify(
-        tokenLimpio,
-        process.env.JWT_SECRET
-    );
 
     try {
         const decoded = jwt.verify(

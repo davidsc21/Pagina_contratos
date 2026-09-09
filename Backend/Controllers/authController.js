@@ -7,7 +7,10 @@ const login = async(req, res) => {
     try {
         const {correo, password} = req.body;
 
-        const resultado = await pool.query("SELECT * FROM  usuarios WHERE correo = $1", [correo]);
+        const resultado = await pool.query(
+            "SELECT id, nombre, apellido, correo, password, rol FROM usuarios WHERE correo = $1",
+            [correo]
+        );
 
         if (resultado.rows.length === 0) {
         return res.status(401).json({
