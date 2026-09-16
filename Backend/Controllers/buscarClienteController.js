@@ -12,7 +12,7 @@ const buscarCliente = async (req, res) => {
 
         const resultado = await pool.query(
             `SELECT * FROM cliente
-             WHERE nombre ILIKE $1 OR nit_cc ILIKE $1 OR representante_legal ILIKE $1
+             WHERE nombre ILIKE $1
              ORDER BY nombre ASC
              LIMIT 20`,
             [termino]

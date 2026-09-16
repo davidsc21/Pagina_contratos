@@ -154,7 +154,7 @@ function templateCrear() {
         <section class="contenido-paso" id="paso-contenido-1">
             <div class="panel">
                 <h2 class="panel-titulo">Buscar cliente</h2>
-                <p class="panel-descripcion">Escribe el nombre, NIT/CC o representante del cliente</p>
+                <p class="panel-descripcion">Escribe el nombre del cliente</p>
 
                 <form id="formulario-busqueda" class="buscador-clientes">
                     <input type="text" id="campo-busqueda" class="campo-busqueda-cliente"
@@ -182,13 +182,68 @@ function templateCrear() {
         </section>
 
         <section class="contenido-paso" id="paso-contenido-2" hidden>
-            <div class="panel">
-                <h2 class="panel-titulo">Datos del contrato</h2>
-                <p class="panel-descripcion">Los campos de este paso se habilitarán próximamente</p>
-                <div class="construccion">
-                    <span class="construccion-icono">&#9888;</span>
-                    <p>Esta sección está en construcción</p>
-                </div>
+            <div class="contrato-columnas">
+
+                <section class="contrato-formulario">
+                    <div class="panel">
+                        <h2 class="panel-titulo">Datos del contrato</h2>
+                        <p class="panel-descripcion">Completa la información que aparecerá en el contrato</p>
+
+                        <div class="contrato-cliente">
+                            <span class="etiqueta-seleccionado">Cliente</span>
+                            <p class="contrato-cliente-nombre" id="contrato-cliente-nombre"></p>
+                            <p class="contrato-cliente-datos" id="contrato-cliente-datos"></p>
+                        </div>
+
+                        <form id="formulario-contrato" class="formulario-contrato">
+                            <div class="campo-formulario">
+                                <label for="contrato-tipo">Tipo de contrato</label>
+                                <select id="contrato-tipo" class="filtro-estado">
+                                    <option value="Prestacion de servicios">Prestación de servicios</option>
+                                </select>
+                            </div>
+
+                            <div class="campo-formulario">
+                                <label for="contrato-numero">Número de contrato</label>
+                                <input type="text" id="contrato-numero" placeholder="Ej. CP-2026-001">
+                            </div>
+
+                            <div class="campo-formulario">
+                                <label for="contrato-inicio">Fecha de inicio</label>
+                                <input type="date" id="contrato-inicio">
+                            </div>
+
+                            <div class="campo-formulario">
+                                <label for="contrato-vencimiento">Fecha de vencimiento</label>
+                                <input type="date" id="contrato-vencimiento">
+                            </div>
+
+                            <div class="campo-formulario">
+                                <label for="contrato-monto">Monto (COP)</label>
+                                <input type="number" id="contrato-monto" placeholder="0" min="0">
+                            </div>
+
+                            <div class="campo-formulario">
+                                <label for="contrato-estado">Estado</label>
+                                <select id="contrato-estado" class="filtro-estado">
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="Activo">Activo</option>
+                                    <option value="Finalizado">Finalizado</option>
+                                    <option value="Vencido">Vencido</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <aside class="contrato-preview">
+                    <div class="preview-contenedor">
+                        <h3 class="preview-titulo" id="preview-titulo">Vista previa del contrato</h3>
+                        <div class="preview-html" id="preview-html">
+                            <p class="servicio-busqueda">Selecciona una plantilla para ver su contenido</p>
+                        </div>
+                    </div>
+                </aside>
             </div>
 
             <div class="pie-paso">
@@ -480,6 +535,17 @@ function initCrear() {
     const btnCambiar = document.getElementById("btn-cambiar");
     const btnContinuar = document.getElementById("btn-continuar");
 
+    const contratoClienteNombre = document.getElementById("contrato-cliente-nombre");
+    const contratoClienteDatos = document.getElementById("contrato-cliente-datos");
+    const contratoTipo = document.getElementById("contrato-tipo");
+    const contratoNumero = document.getElementById("contrato-numero");
+    const contratoInicio = document.getElementById("contrato-inicio");
+    const contratoVencimiento = document.getElementById("contrato-vencimiento");
+    const contratoMonto = document.getElementById("contrato-monto");
+    const contratoEstado = document.getElementById("contrato-estado");
+    const previewTitulo = document.getElementById("preview-titulo");
+    const previewHtml = document.getElementById("preview-html");
+
     let temporizadorBusqueda = null;
 
     async function buscar(termino) {
@@ -584,6 +650,85 @@ function initCrear() {
         resultados.innerHTML = "";
     }
 
+    function formatearNombrePlantilla(nombre) {
+        return nombre.replace(/\.(docx?|txt|rtf)$/i, "").replace(/\./g, " ");
+    }
+
+    async function cargarPlantillas() {
+        previewTitulo.textContent = "Vista previa del contrato";
+        previewHtml.innerHTML = '<p class="servicio-busqueda">Cargando plantillas de Google Drive...</p>';
+
+        try {
+            const respuesta = await fetch(`${API_URL}/plantillas`, { headers: obtenerHeaders() });
+
+            if (!respuesta.ok) {
+                const error = await respuesta.json().catch(() => null);
+                throw new Error(error?.mensaje || "No se pudieron obtener las plantillas");
+            }
+
+            const plantillas = await respuesta.json();
+
+            if (plantillas.length === 0) {
+                previewHtml.innerHTML = '<p class="servicio-busqueda">No hay plantillas en la carpeta de Drive</p>';
+                return;
+            }
+
+            contratoTipo.innerHTML = "";
+            plantillas.forEach((plantilla) => {
+                const opcion = document.createElement("option");
+                opcion.value = plantilla.id;
+                opcion.textContent = formatearNombrePlantilla(plantilla.name);
+                contratoTipo.appendChild(opcion);
+            });
+
+            cargarContenidoPlantilla(contratoTipo.value);
+
+        } catch (error) {
+            previewHtml.innerHTML = `<p class="servicio-busqueda">${error.message}</p>`;
+        }
+    }
+
+    async function cargarContenidoPlantilla(id) {
+        previewHtml.innerHTML = '<p class="servicio-busqueda">Cargando contenido...</p>';
+
+        try {
+            const respuesta = await fetch(`${API_URL}/plantillas/${id}`, { headers: obtenerHeaders() });
+
+            if (!respuesta.ok) {
+                const error = await respuesta.json().catch(() => null);
+                throw new Error(error?.mensaje || "No se pudo cargar la plantilla");
+            }
+
+            const contenido = await respuesta.json();
+            previewTitulo.textContent = contenido.name || "Vista previa del contrato";
+            previewHtml.innerHTML = contenido.html || '<p class="servicio-busqueda">La plantilla no tiene contenido</p>';
+
+        } catch (error) {
+            previewHtml.innerHTML = `<p class="servicio-busqueda">${error.message}</p>`;
+        }
+    }
+
+    contratoTipo.addEventListener("change", () => {
+        if (contratoTipo.value) cargarContenidoPlantilla(contratoTipo.value);
+    });
+
+    function llenarDatosCliente() {
+        if (!clienteSeleccionado) return;
+
+        contratoClienteNombre.textContent = clienteSeleccionado.nombre;
+
+        const datos = [
+            clienteSeleccionado.tipo_cliente,
+            `NIT/CC ${clienteSeleccionado.nit_cc}`
+        ];
+        if (clienteSeleccionado.representante_legal) {
+            datos.push(`Representante: ${clienteSeleccionado.representante_legal}`);
+        }
+        contratoClienteDatos.textContent = datos.join("   |   ");
+
+        cargarPlantillas();
+    }
+
     btnCambiar.addEventListener("click", () => {
         clienteSeleccionado = null;
         clienteSeleccionadoDiv.hidden = true;
@@ -593,6 +738,8 @@ function initCrear() {
     });
 
     function irAPaso(numero) {
+        if (numero > 1 && !clienteSeleccionado) numero = 1;
+
         pasoActual = numero;
 
         document.querySelectorAll(".contenido-paso").forEach((seccion) => {
@@ -604,6 +751,10 @@ function initCrear() {
             paso.classList.remove("paso-activo");
         });
         document.getElementById(`paso-boton-${numero}`).classList.add("paso-activo");
+
+        if (numero === 2) {
+            llenarDatosCliente();
+        }
     }
 
     document.querySelectorAll(".via-paso").forEach((paso) => {

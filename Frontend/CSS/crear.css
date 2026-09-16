@@ -297,6 +297,94 @@
   color: var(--green-dark);
 }
 
+/* ============ PASO 2: FORMULARIO + VISTA PREVIA ============ */
+.contrato-columnas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.contrato-formulario {
+  min-width: 0;
+}
+
+.formulario-contrato {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.contrato-cliente {
+  padding: 0.9rem 1.1rem;
+  background-color: var(--green-light);
+  border-radius: 10px;
+  margin-bottom: 1.2rem;
+}
+
+.contrato-cliente-nombre {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--green-darker);
+}
+
+.contrato-cliente-datos {
+  font-size: 0.8rem;
+  color: var(--green-darker);
+  opacity: 0.85;
+  margin-top: 0.2rem;
+}
+
+/* ============ VISTA PREVIA DEL CONTRATO ============ */
+.contrato-preview {
+  position: sticky;
+  top: 1rem;
+  min-width: 0;
+}
+
+.preview-contenedor {
+  background-color: var(--bg-white);
+  border: 1px solid #e3e8e5;
+  border-radius: 14px;
+  padding: 1.8rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.preview-titulo {
+  font-family: 'Alfa Slab One', serif;
+  font-size: 1.05rem;
+  color: var(--green-darker);
+  text-align: center;
+  margin-bottom: 0.2rem;
+}
+
+.preview-html {
+  margin-top: 0.8rem;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #2b2b2b;
+  background-color: #ffffff;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #eef1ef;
+  max-height: 520px;
+  overflow-y: auto;
+  word-break: break-word;
+}
+
+.preview-html p {
+  margin: 0 0 0.6rem;
+}
+
+.preview-html h1,
+.preview-html h2,
+.preview-html h3,
+.preview-html h4 {
+  font-family: 'Poppins', sans-serif;
+  color: var(--green-darker);
+  margin: 0.8rem 0 0.4rem;
+}
+
 /* ============ SECCIONES EN CONSTRUCCIÓN ============ */
 .construccion {
   display: flex;
@@ -317,6 +405,16 @@
 }
 
 /* ============ RESPONSIVO ============ */
+@media (max-width: 900px) {
+  .contrato-columnas {
+    grid-template-columns: 1fr;
+  }
+
+  .contrato-preview {
+    position: static;
+  }
+}
+
 @media (max-width: 480px) {
   .pasos { flex-wrap: wrap; gap: 0.5rem; }
   .paso-linea { display: none; }
@@ -326,6 +424,7 @@
   .btn-seleccionar { width: 100%; }
   .cliente-seleccionado { flex-direction: column; align-items: flex-start; }
   .btn-cambiar { width: 100%; }
+  .formulario-contrato { grid-template-columns: 1fr; }
   .pie-paso { flex-direction: column; }
   .pie-paso .btn-continuar,
   .pie-paso .btn-generar,
