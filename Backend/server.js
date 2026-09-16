@@ -4,6 +4,7 @@ const pool = require("./Databases/db");
 const usuariosRoutes = require("./Routes/usuarios");
 const authRoutes = require("./Routes/auth");
 const clientesRoutes = require("./Routes/clientes");
+const buscarClienteRoutes = require("./Routes/buscarCliente");
 require("dotenv").config();
 
 const app = express();
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use("/usuarios", usuariosRoutes);
 app.use("/auth", authRoutes);
 app.use("/clientes", clientesRoutes);
+app.use("/buscar-cliente", buscarClienteRoutes);
 
 app.use((err, req, res, next) => {
     console.error("ERROR NO MANEJADO:", err);

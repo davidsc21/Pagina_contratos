@@ -154,7 +154,7 @@ function templateCrear() {
         <section class="contenido-paso" id="paso-contenido-1">
             <div class="panel">
                 <h2 class="panel-titulo">Buscar cliente</h2>
-                <p class="panel-descripcion">Escribe el nombre, documento o correo del cliente</p>
+                <p class="panel-descripcion">Escribe el nombre, NIT/CC o representante del cliente</p>
 
                 <form id="formulario-busqueda" class="buscador-clientes">
                     <input type="text" id="campo-busqueda" class="campo-busqueda-cliente"
@@ -166,9 +166,10 @@ function templateCrear() {
             </div>
 
             <div class="cliente-seleccionado" id="cliente-seleccionado" hidden>
-                <div>
+                <div class="cliente-seleccionado-info">
                     <span class="etiqueta-seleccionado">Cliente seleccionado</span>
                     <p class="cliente-seleccionado-nombre" id="cliente-seleccionado-nombre"></p>
+                    <p class="cliente-seleccionado-detalle" id="cliente-seleccionado-detalle"></p>
                 </div>
                 <button type="button" class="btn-cambiar" id="btn-cambiar">Cambiar</button>
             </div>
@@ -467,13 +468,6 @@ function initInicio() {
 }
 
 function initCrear() {
-    const CLIENTES = [
-        { id: 1, nombre: "María López García", documento: "GUTL800101MNG", correo: "maria.lopez@correo.com", telefono: "+52 55 1234 5678" },
-        { id: 2, nombre: "Carlos Pérez Mendoza", documento: "PEMC850622XKL", correo: "carlos.perez@correo.com", telefono: "+52 33 8765 4321" },
-        { id: 3, nombre: "Ana Torres Ruiz", documento: "TORA920310NJS", correo: "ana.torres@correo.com", telefono: "+52 81 5566 7788" },
-        { id: 4, nombre: "Jorge Hernández Cruz", documento: "HECJ750515QWE", correo: "jorge.hernandez@correo.com", telefono: "+52 44 9988 1122" }
-    ];
-
     let clienteSeleccionado = null;
     let pasoActual = 1;
 
@@ -482,24 +476,59 @@ function initCrear() {
     const resultados = document.getElementById("resultados-clientes");
     const clienteSeleccionadoDiv = document.getElementById("cliente-seleccionado");
     const clienteSeleccionadoNombre = document.getElementById("cliente-seleccionado-nombre");
+    const clienteSeleccionadoDetalle = document.getElementById("cliente-seleccionado-detalle");
     const btnCambiar = document.getElementById("btn-cambiar");
     const btnContinuar = document.getElementById("btn-continuar");
 
+    let temporizadorBusqueda = null;
+
+    async function buscar(termino) {
+        resultados.innerHTML = '<p class="servicio-busqueda">Buscando...</p>';
+
+        try {
+            const respuesta = await fetch(
+                `${API_URL}/buscar-cliente?q=${encodeURIComponent(termino)}`,
+                { headers: obtenerHeaders() }
+            );
+
+            if (!respuesta.ok) {
+                throw new Error("Error al obtener los clientes");
+            }
+
+            const clientes = await respuesta.json();
+
+            if (campoBusqueda.value.trim() !== termino) return;
+            renderizarResultados(clientes);
+
+        } catch (error) {
+            if (campoBusqueda.value.trim() !== termino) return;
+            resultados.innerHTML = '<p class="servicio-busqueda">No se pudo conectar con el servidor</p>';
+        }
+    }
+
+    campoBusqueda.addEventListener("input", () => {
+        clearTimeout(temporizadorBusqueda);
+
+        const termino = campoBusqueda.value.trim();
+        if (!termino) {
+            resultados.innerHTML = "";
+            return;
+        }
+
+        temporizadorBusqueda = setTimeout(() => buscar(termino), 300);
+    });
+
     formularioBusqueda.addEventListener("submit", (event) => {
         event.preventDefault();
-        const termino = campoBusqueda.value.trim().toLowerCase();
+        clearTimeout(temporizadorBusqueda);
 
+        const termino = campoBusqueda.value.trim();
         if (!termino) {
             resultados.innerHTML = '<p class="servicio-busqueda">Escribe un término para buscar</p>';
             return;
         }
 
-        const coincidencias = CLIENTES.filter((cliente) => {
-            const texto = `${cliente.nombre} ${cliente.documento} ${cliente.correo}`.toLowerCase();
-            return texto.includes(termino);
-        });
-
-        renderizarResultados(coincidencias);
+        buscar(termino);
     });
 
     function renderizarResultados(lista) {
@@ -523,7 +552,7 @@ function initCrear() {
 
             const detalle = document.createElement("span");
             detalle.className = "tarjeta-cliente-detalle";
-            detalle.textContent = `${cliente.documento} | ${cliente.correo}`;
+            detalle.textContent = `${cliente.tipo_cliente} | ${cliente.nit_cc}`;
 
             info.appendChild(nombre);
             info.appendChild(detalle);
@@ -543,6 +572,13 @@ function initCrear() {
     function seleccionarCliente(cliente) {
         clienteSeleccionado = cliente;
         clienteSeleccionadoNombre.textContent = cliente.nombre;
+
+        const detalles = [`Tipo: ${cliente.tipo_cliente}`, `NIT/CC: ${cliente.nit_cc}`];
+        if (cliente.representante_legal) {
+            detalles.push(`Representante: ${cliente.representante_legal}`);
+        }
+        clienteSeleccionadoDetalle.textContent = detalles.join("   |   ");
+
         clienteSeleccionadoDiv.hidden = false;
         btnContinuar.disabled = false;
         resultados.innerHTML = "";

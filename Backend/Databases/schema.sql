@@ -17,13 +17,13 @@ CREATE TABLE IF NOT EXISTS usuarios (
 -- Tabla de clientes (usada por la página de administración)
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS clientes (
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(150) NOT NULL,
-    documento VARCHAR(50) NOT NULL UNIQUE,
-    correo VARCHAR(120),
-    telefono VARCHAR(30),
-    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS cliente (
+    id_cliente SERIAL PRIMARY KEY,
+    tipo_cliente VARCHAR(10) NOT NULL
+        CHECK (tipo_cliente IN ('Natural', 'Juridico')),
+    nit_cc VARCHAR(20) NOT NULL UNIQUE,
+    nombre VARCHAR(100) NOT NULL,
+    representante_legal VARCHAR(100)
 );
 
 -- ============================================================

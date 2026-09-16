@@ -213,10 +213,21 @@
   letter-spacing: 0.5px;
 }
 
+.cliente-seleccionado-info {
+  min-width: 0;
+}
+
 .cliente-seleccionado-nombre {
   font-weight: 600;
   font-size: 0.95rem;
   color: var(--green-darker);
+}
+
+.cliente-seleccionado-detalle {
+  font-size: 0.78rem;
+  color: var(--green-darker);
+  opacity: 0.8;
+  margin-top: 0.2rem;
 }
 
 .btn-cambiar {
