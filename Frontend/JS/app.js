@@ -199,7 +199,15 @@ function templateCrear() {
                             <div class="campo-formulario">
                                 <label for="contrato-tipo">Tipo de contrato</label>
                                 <select id="contrato-tipo" class="filtro-estado">
+                                    <option value="">Selecciona un tipo...</option>
                                     <option value="Prestacion de servicios">Prestación de servicios</option>
+                                </select>
+                            </div>
+
+                            <div class="campo-formulario">
+                                <label for="contrato-plantilla">Plantilla de contrato</label>
+                                <select id="contrato-plantilla" class="filtro-estado">
+                                    <option value="">Selecciona una plantilla...</option>
                                 </select>
                             </div>
 
@@ -226,6 +234,7 @@ function templateCrear() {
                             <div class="campo-formulario">
                                 <label for="contrato-estado">Estado</label>
                                 <select id="contrato-estado" class="filtro-estado">
+                                    <option value="">Selecciona un estado...</option>
                                     <option value="Pendiente">Pendiente</option>
                                     <option value="Activo">Activo</option>
                                     <option value="Finalizado">Finalizado</option>
@@ -538,6 +547,7 @@ function initCrear() {
     const contratoClienteNombre = document.getElementById("contrato-cliente-nombre");
     const contratoClienteDatos = document.getElementById("contrato-cliente-datos");
     const contratoTipo = document.getElementById("contrato-tipo");
+    const contratoPlantilla = document.getElementById("contrato-plantilla");
     const contratoNumero = document.getElementById("contrato-numero");
     const contratoInicio = document.getElementById("contrato-inicio");
     const contratoVencimiento = document.getElementById("contrato-vencimiento");
@@ -627,11 +637,12 @@ function initCrear() {
             boton.type = "button";
             boton.className = "btn-seleccionar";
             boton.textContent = "Seleccionar";
-            boton.addEventListener("click", () => seleccionarCliente(cliente));
 
             tarjeta.appendChild(info);
             tarjeta.appendChild(boton);
             resultados.appendChild(tarjeta);
+
+            tarjeta.addEventListener("click", () => seleccionarCliente(cliente));
         });
     }
 
@@ -648,6 +659,21 @@ function initCrear() {
         clienteSeleccionadoDiv.hidden = false;
         btnContinuar.disabled = false;
         resultados.innerHTML = "";
+
+        resetearFormularioContrato();
+    }
+
+    function resetearFormularioContrato() {
+        contratoTipo.value = "";
+        contratoPlantilla.innerHTML = '<option value="">Selecciona una plantilla...</option>';
+        contratoNumero.value = "";
+        contratoInicio.value = "";
+        contratoVencimiento.value = "";
+        contratoMonto.value = "";
+        contratoEstado.value = "";
+
+        previewTitulo.textContent = "Vista previa del contrato";
+        previewHtml.innerHTML = '<p class="servicio-busqueda">Selecciona una plantilla para ver su contenido</p>';
     }
 
     function formatearNombrePlantilla(nombre) {
@@ -656,7 +682,8 @@ function initCrear() {
 
     async function cargarPlantillas() {
         previewTitulo.textContent = "Vista previa del contrato";
-        previewHtml.innerHTML = '<p class="servicio-busqueda">Cargando plantillas de Google Drive...</p>';
+        previewHtml.innerHTML = '<p class="servicio-busqueda">Selecciona una plantilla para ver su contenido</p>';
+        contratoPlantilla.innerHTML = '<option value="">Selecciona una plantilla...</option>';
 
         try {
             const respuesta = await fetch(`${API_URL}/plantillas`, { headers: obtenerHeaders() });
@@ -673,15 +700,12 @@ function initCrear() {
                 return;
             }
 
-            contratoTipo.innerHTML = "";
             plantillas.forEach((plantilla) => {
                 const opcion = document.createElement("option");
                 opcion.value = plantilla.id;
                 opcion.textContent = formatearNombrePlantilla(plantilla.name);
-                contratoTipo.appendChild(opcion);
+                contratoPlantilla.appendChild(opcion);
             });
-
-            cargarContenidoPlantilla(contratoTipo.value);
 
         } catch (error) {
             previewHtml.innerHTML = `<p class="servicio-busqueda">${error.message}</p>`;
@@ -708,8 +732,8 @@ function initCrear() {
         }
     }
 
-    contratoTipo.addEventListener("change", () => {
-        if (contratoTipo.value) cargarContenidoPlantilla(contratoTipo.value);
+    contratoPlantilla.addEventListener("change", () => {
+        if (contratoPlantilla.value) cargarContenidoPlantilla(contratoPlantilla.value);
     });
 
     function llenarDatosCliente() {
