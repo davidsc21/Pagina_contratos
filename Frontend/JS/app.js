@@ -241,6 +241,11 @@ function templateCrear() {
                                     <option value="Vencido">Vencido</option>
                                 </select>
                             </div>
+
+                            <div class="campo-formulario campo-completo">
+                                <label for="contrato-descripcion">Descripción / Objeto del contrato</label>
+                                <textarea id="contrato-descripcion" rows="3" placeholder="Describe el objeto del contrato..."></textarea>
+                            </div>
                         </form>
                     </div>
                 </section>
@@ -546,6 +551,7 @@ function initCrear() {
 
     const contratoClienteNombre = document.getElementById("contrato-cliente-nombre");
     const contratoClienteDatos = document.getElementById("contrato-cliente-datos");
+    const formularioContrato = document.getElementById("formulario-contrato");
     const contratoTipo = document.getElementById("contrato-tipo");
     const contratoPlantilla = document.getElementById("contrato-plantilla");
     const contratoNumero = document.getElementById("contrato-numero");
@@ -553,10 +559,12 @@ function initCrear() {
     const contratoVencimiento = document.getElementById("contrato-vencimiento");
     const contratoMonto = document.getElementById("contrato-monto");
     const contratoEstado = document.getElementById("contrato-estado");
+    const contratoDescripcion = document.getElementById("contrato-descripcion");
     const previewTitulo = document.getElementById("preview-titulo");
     const previewHtml = document.getElementById("preview-html");
 
     let temporizadorBusqueda = null;
+    let plantillaHtmlCruda = "";
 
     async function buscar(termino) {
         resultados.innerHTML = '<p class="servicio-busqueda">Buscando...</p>';
@@ -671,6 +679,8 @@ function initCrear() {
         contratoVencimiento.value = "";
         contratoMonto.value = "";
         contratoEstado.value = "";
+        contratoDescripcion.value = "";
+        plantillaHtmlCruda = "";
 
         previewTitulo.textContent = "Vista previa del contrato";
         previewHtml.innerHTML = '<p class="servicio-busqueda">Selecciona una plantilla para ver su contenido</p>';
@@ -725,16 +735,85 @@ function initCrear() {
 
             const contenido = await respuesta.json();
             previewTitulo.textContent = contenido.name || "Vista previa del contrato";
-            previewHtml.innerHTML = contenido.html || '<p class="servicio-busqueda">La plantilla no tiene contenido</p>';
+            plantillaHtmlCruda = contenido.html || "";
+            renderizarPreviewConDatos();
 
         } catch (error) {
+            plantillaHtmlCruda = "";
             previewHtml.innerHTML = `<p class="servicio-busqueda">${error.message}</p>`;
         }
+    }
+
+    function escaparHTML(texto) {
+        const div = document.createElement("div");
+        div.textContent = texto ?? "";
+        return div.innerHTML;
+    }
+
+    function formatearMoneda(valor) {
+        const numero = parseFloat(valor);
+        if (isNaN(numero)) return "";
+        return "$" + numero.toLocaleString("es-CO");
+    }
+
+    function numeroALetras(numero) {
+        const UNIDADES = ["CERO", "UNO", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE",
+            "DIEZ", "ONCE", "DOCE", "TRECE", "CATORCE", "QUINCE", "DIECISÉIS", "DIECISIETE", "DIECIOCHO",
+            "DIECINUEVE", "VEINTE", "VEINTIUNO", "VEINTIDÓS", "VEINTITRÉS", "VEINTICUATRO", "VEINTICINCO",
+            "VEINTISÉIS", "VEINTISIETE", "VEINTIOCHO", "VEINTINUEVE"];
+        const DECENAS = ["", "", "", "TREINTA", "CUARENTA", "CINCUENTA", "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"];
+        const CENTENAS = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", "QUINIENTOS",
+            "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"];
+
+        if (numero < 30) return UNIDADES[numero];
+        if (numero < 100) {
+            const d = Math.floor(numero / 10);
+            const u = numero % 10;
+            return DECENAS[d] + (u ? " Y " + UNIDADES[u] : "");
+        }
+        if (numero === 100) return "CIEN";
+        if (numero < 1000) {
+            const c = Math.floor(numero / 100);
+            const r = numero % 100;
+            return CENTENAS[c] + (r ? " " + numeroALetras(r) : "");
+        }
+        return String(numero);
+    }
+
+    function calcularPlazo() {
+        if (!contratoInicio.value || !contratoVencimiento.value) return "";
+        const inicio = new Date(contratoInicio.value);
+        const fin = new Date(contratoVencimiento.value);
+        const dias = Math.round((fin - inicio) / 86400000);
+        if (isNaN(dias) || dias < 0) return "";
+        return `${numeroALetras(dias)} (${dias}) DÍAS`;
+    }
+
+    function renderizarPreviewConDatos() {
+        if (!plantillaHtmlCruda) return;
+
+        const reemplazos = {
+            "[CLIENTE]": escaparHTML(clienteSeleccionado ? clienteSeleccionado.nombre : ""),
+            "[VALOR]": escaparHTML(formatearMoneda(contratoMonto.value)),
+            "[PLAZO]": escaparHTML(calcularPlazo()),
+            "[DESCRIPCION]": escaparHTML(contratoDescripcion.value)
+        };
+
+        let resultado = plantillaHtmlCruda;
+        Object.keys(reemplazos).forEach((marcador) => {
+            const valor = reemplazos[marcador] || marcador;
+            resultado = resultado.split(marcador).join(valor);
+        });
+
+        previewHtml.innerHTML = resultado;
     }
 
     contratoPlantilla.addEventListener("change", () => {
         if (contratoPlantilla.value) cargarContenidoPlantilla(contratoPlantilla.value);
     });
+
+    formularioContrato.addEventListener("input", renderizarPreviewConDatos);
+    formularioContrato.addEventListener("change", renderizarPreviewConDatos);
 
     function llenarDatosCliente() {
         if (!clienteSeleccionado) return;

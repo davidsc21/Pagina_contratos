@@ -323,9 +323,30 @@
 }
 
 .formulario-contrato .campo-formulario input,
-.formulario-contrato .campo-formulario select {
+.formulario-contrato .campo-formulario select,
+.formulario-contrato .campo-formulario textarea {
   width: 100%;
   min-width: 0;
+}
+
+.formulario-contrato .campo-formulario textarea {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e3e8e5;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.88rem;
+  outline: none;
+  background-color: var(--bg-white);
+  color: var(--input-text);
+  resize: vertical;
+}
+
+.formulario-contrato .campo-formulario textarea:focus {
+  border-color: var(--green-dark);
+}
+
+.campo-completo {
+  grid-column: 1 / -1;
 }
 
 .contrato-cliente {
