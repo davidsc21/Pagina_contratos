@@ -384,8 +384,6 @@ function templateAdmin() {
                 <p class="panel-descripcion">Completa los datos y presiona guardar</p>
 
                 <form id="formulario-usuario" class="formulario-cliente">
-                    <input type="hidden" id="usuario-id">
-
                     <div class="campo-formulario">
                         <label for="usuario-nombre">Nombre</label>
                         <input type="text" id="usuario-nombre" placeholder="Nombre del usuario" required>
@@ -416,7 +414,6 @@ function templateAdmin() {
 
                     <div class="acciones-formulario">
                         <button type="submit" class="btn-guardar" id="btn-guardar-usuario">Guardar usuario</button>
-                        <button type="button" class="btn-cancelar" id="btn-cancelar-usuario" hidden>Cancelar</button>
                     </div>
                 </form>
             </section>
@@ -456,41 +453,144 @@ function templateAdmin() {
             </section>
         </section>
 
+        <!-- MODAL EDITAR USUARIO -->
+        <div class="modal-vista" id="modal-usuario" hidden>
+            <div class="modal-contenido">
+                <div class="modal-encabezado">
+                    <h2 class="panel-titulo">Editar usuario</h2>
+                    <button type="button" class="modal-cerrar" id="btn-cerrar-modal-usuario" aria-label="Cerrar">&times;</button>
+                </div>
+                <p class="panel-descripcion">Actualiza los datos y presiona guardar</p>
+
+                <form id="formulario-usuario-editar" class="formulario-cliente">
+                    <input type="hidden" id="usuario-id-editar">
+
+                    <div class="campo-formulario">
+                        <label for="usuario-nombre-editar">Nombre</label>
+                        <input type="text" id="usuario-nombre-editar" placeholder="Nombre del usuario" required>
+                    </div>
+
+                    <div class="campo-formulario">
+                        <label for="usuario-apellido-editar">Apellido</label>
+                        <input type="text" id="usuario-apellido-editar" placeholder="Apellido del usuario" required>
+                    </div>
+
+                    <div class="campo-formulario">
+                        <label for="usuario-correo-editar">Correo</label>
+                        <input type="email" id="usuario-correo-editar" placeholder="correo@ejemplo.com" required>
+                    </div>
+
+                    <div class="campo-formulario">
+                        <label for="usuario-password-editar">Contraseña</label>
+                        <input type="password" id="usuario-password-editar" placeholder="Dejar vacío para mantener la actual" minlength="6">
+                    </div>
+
+                    <div class="campo-formulario">
+                        <label for="usuario-rol-editar">Rol</label>
+                        <select id="usuario-rol-editar" class="filtro-estado">
+                            <option value="usuario">Usuario</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+
+                    <div class="acciones-formulario">
+                        <button type="submit" class="btn-guardar" id="btn-guardar-editar-usuario">Actualizar usuario</button>
+                        <button type="button" class="btn-cancelar" id="btn-cancelar-editar-usuario">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- TAB: ADMINISTRAR CLIENTES -->
         <section class="admin-seccion" id="seccion-admin-clientes" hidden>
             <section class="panel panel-formulario">
-                <h2 class="panel-titulo" id="titulo-formulario">Nuevo cliente</h2>
+                <h2 class="panel-titulo">Nuevo cliente</h2>
                 <p class="panel-descripcion">Completa los datos y presiona guardar</p>
 
                 <form id="formulario-cliente" class="formulario-cliente">
-                    <input type="hidden" id="cliente-id">
-
                     <div class="campo-formulario">
                         <label for="cliente-nombre">Nombre completo</label>
                         <input type="text" id="cliente-nombre" placeholder="Nombre del cliente" required>
                     </div>
 
                     <div class="campo-formulario">
-                        <label for="cliente-documento">Documento / RFC</label>
-                        <input type="text" id="cliente-documento" placeholder="Documento o RFC" required>
+                        <label for="cliente-tipo">Tipo de cliente</label>
+                        <select id="cliente-tipo" class="filtro-estado" required>
+                            <option value="">Selecciona el tipo...</option>
+                            <option value="Natural">Natural</option>
+                            <option value="Juridico">Jurídico</option>
+                        </select>
                     </div>
 
                     <div class="campo-formulario">
-                        <label for="cliente-correo">Correo</label>
-                        <input type="email" id="cliente-correo" placeholder="correo@ejemplo.com">
+                        <label for="cliente-nit">NIT / CC</label>
+                        <input type="text" id="cliente-nit" placeholder="NIT o cédula del cliente" required>
                     </div>
 
                     <div class="campo-formulario">
-                        <label for="cliente-telefono">Teléfono</label>
-                        <input type="tel" id="cliente-telefono" placeholder="+52 55 0000 0000">
+                        <label for="cliente-representante">Representante legal</label>
+                        <input type="text" id="cliente-representante" placeholder="Solo para clientes jurídicos">
+                    </div>
+
+                    <div class="campo-formulario">
+                        <label for="cliente-direccion">Dirección</label>
+                        <input type="text" id="cliente-direccion" placeholder="Dirección del cliente">
                     </div>
 
                     <div class="acciones-formulario">
                         <button type="submit" class="btn-guardar" id="btn-guardar">Guardar cliente</button>
-                        <button type="button" class="btn-cancelar" id="btn-cancelar" hidden>Cancelar</button>
                     </div>
                 </form>
             </section>
+
+            <!-- MODAL EDITAR CLIENTE -->
+            <div class="modal-vista" id="modal-cliente" hidden>
+                <div class="modal-contenido">
+                    <div class="modal-encabezado">
+                        <h2 class="panel-titulo">Editar cliente</h2>
+                        <button type="button" class="modal-cerrar" id="btn-cerrar-modal" aria-label="Cerrar">&times;</button>
+                    </div>
+                    <p class="panel-descripcion">Actualiza los datos y presiona guardar</p>
+
+                    <form id="formulario-cliente-editar" class="formulario-cliente">
+                        <input type="hidden" id="cliente-id-editar">
+
+                        <div class="campo-formulario">
+                            <label for="cliente-nombre-editar">Nombre completo</label>
+                            <input type="text" id="cliente-nombre-editar" placeholder="Nombre del cliente" required>
+                        </div>
+
+                        <div class="campo-formulario">
+                            <label for="cliente-tipo-editar">Tipo de cliente</label>
+                            <select id="cliente-tipo-editar" class="filtro-estado" required>
+                                <option value="">Selecciona el tipo...</option>
+                                <option value="Natural">Natural</option>
+                                <option value="Juridico">Jurídico</option>
+                            </select>
+                        </div>
+
+                        <div class="campo-formulario">
+                            <label for="cliente-nit-editar">NIT / CC</label>
+                            <input type="text" id="cliente-nit-editar" placeholder="NIT o cédula del cliente" required>
+                        </div>
+
+                        <div class="campo-formulario">
+                            <label for="cliente-representante-editar">Representante legal</label>
+                            <input type="text" id="cliente-representante-editar" placeholder="Solo para clientes jurídicos">
+                        </div>
+
+                        <div class="campo-formulario">
+                            <label for="cliente-direccion-editar">Dirección</label>
+                            <input type="text" id="cliente-direccion-editar" placeholder="Dirección del cliente">
+                        </div>
+
+                        <div class="acciones-formulario">
+                            <button type="submit" class="btn-guardar" id="btn-guardar-editar">Actualizar cliente</button>
+                            <button type="button" class="btn-cancelar" id="btn-cancelar-editar">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             <section class="historial historial-admin">
                 <div class="historial-encabezado">
@@ -499,6 +599,11 @@ function templateAdmin() {
                 </div>
 
                 <div class="herramientas">
+                    <select id="filtro-tipo-cliente" class="filtro-estado">
+                        <option value="">Todos los tipos</option>
+                        <option value="Natural">Natural</option>
+                        <option value="Juridico">Jurídico</option>
+                    </select>
                     <input type="text" id="buscador-admin" class="campo-busqueda" placeholder="Buscar cliente...">
                 </div>
 
@@ -508,9 +613,9 @@ function templateAdmin() {
                             <tr>
                                 <th>ID</th>
                                 <th>Nombre</th>
-                                <th>Documento</th>
-                                <th>Correo</th>
-                                <th>Teléfono</th>
+                                <th>Tipo</th>
+                                <th>NIT / CC</th>
+                                <th>Representante legal</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -934,26 +1039,11 @@ function initAdmin() {
 
     function crearUsuario() {
         const formulario = document.getElementById("formulario-usuario");
-        const usuarioId = document.getElementById("usuario-id");
         const nombreInput = document.getElementById("usuario-nombre");
         const apellidoInput = document.getElementById("usuario-apellido");
         const correoInput = document.getElementById("usuario-correo");
         const passwordInput = document.getElementById("usuario-password");
         const rolInput = document.getElementById("usuario-rol");
-        const btnGuardar = document.getElementById("btn-guardar-usuario");
-        const btnCancelar = document.getElementById("btn-cancelar-usuario");
-
-        function cancelarEdicion() {
-            usuarioId.value = "";
-            formulario.reset();
-            rolInput.value = "usuario";
-            btnGuardar.textContent = "Guardar usuario";
-            btnCancelar.hidden = true;
-            passwordInput.required = true;
-            limpiarMensaje();
-        }
-
-        btnCancelar.addEventListener("click", cancelarEdicion);
 
         formulario.addEventListener("submit", async (event) => {
             event.preventDefault();
@@ -962,38 +1052,26 @@ function initAdmin() {
                 nombre: nombreInput.value.trim(),
                 apellido: apellidoInput.value.trim(),
                 correo: correoInput.value.trim(),
+                password: passwordInput.value,
                 rol: rolInput.value
             };
-
-            if (usuarioId.value) {
-                if (passwordInput.value) {
-                    datos.password = passwordInput.value;
-                }
-            } else {
-                datos.password = passwordInput.value;
-            }
 
             if (!datos.nombre || !datos.apellido || !datos.correo) {
                 mostrarMensaje("Nombre, apellido y correo son obligatorios.", "error");
                 return;
             }
 
-            if (!usuarioId.value && !datos.password) {
+            if (!datos.password) {
                 mostrarMensaje("La contraseña es obligatoria.", "error");
                 return;
             }
 
-            const esEdicion = usuarioId.value !== "";
-
             try {
-                const respuesta = await fetch(
-                    esEdicion ? `${API_URL}/usuarios/${usuarioId.value}` : `${API_URL}/usuarios`,
-                    {
-                        method: esEdicion ? "PUT" : "POST",
-                        headers: obtenerHeaders(),
-                        body: JSON.stringify(datos)
-                    }
-                );
+                const respuesta = await fetch(`${API_URL}/usuarios`, {
+                    method: "POST",
+                    headers: obtenerHeaders(),
+                    body: JSON.stringify(datos)
+                });
 
                 if (!respuesta.ok) {
                     const error = await respuesta.json();
@@ -1001,10 +1079,11 @@ function initAdmin() {
                     return;
                 }
 
-                mostrarToast(esEdicion ? "Usuario actualizado con éxito." : "Usuario guardado en la base de datos.", "exito");
-                cancelarEdicion();
+                mostrarToast("Usuario guardado en la base de datos.", "exito");
+                formulario.reset();
+                rolInput.value = "usuario";
                 if (cargarUsuariosFn) await cargarUsuariosFn();
-                mostrarMensaje(esEdicion ? "Usuario actualizado correctamente." : "Usuario guardado en la base de datos.", "exito");
+                mostrarMensaje("Usuario guardado en la base de datos.", "exito");
 
             } catch (error) {
                 mostrarMensaje("No se pudo conectar con el servidor.", "error");
@@ -1017,6 +1096,16 @@ function initAdmin() {
         const tabla = document.getElementById("cuerpo-usuarios");
         const contador = document.getElementById("contador-usuarios");
         const buscador = document.getElementById("buscador-usuarios");
+        const modalUsuario = document.getElementById("modal-usuario");
+        const formularioUsuarioEditar = document.getElementById("formulario-usuario-editar");
+        const usuarioIdEditar = document.getElementById("usuario-id-editar");
+        const nombreEdit = document.getElementById("usuario-nombre-editar");
+        const apellidoEdit = document.getElementById("usuario-apellido-editar");
+        const correoEdit = document.getElementById("usuario-correo-editar");
+        const passwordEdit = document.getElementById("usuario-password-editar");
+        const rolEdit = document.getElementById("usuario-rol-editar");
+        const btnCerrarModal = document.getElementById("btn-cerrar-modal-usuario");
+        const btnCancelarEditar = document.getElementById("btn-cancelar-editar-usuario");
 
         async function cargarUsuarios() {
             limpiarMensaje();
@@ -1070,7 +1159,7 @@ function initAdmin() {
                 const btnEditar = document.createElement("button");
                 btnEditar.className = "boton-editar";
                 btnEditar.textContent = "Editar";
-                btnEditar.addEventListener("click", () => comenzarEdicion(u));
+                btnEditar.addEventListener("click", () => abrirModalUsuario(u));
 
                 const btnEliminar = document.createElement("button");
                 btnEliminar.className = "boton-eliminar";
@@ -1085,18 +1174,75 @@ function initAdmin() {
             });
         }
 
-        function comenzarEdicion(u) {
-            cambiarTab("crear-usuario");
-            document.getElementById("usuario-id").value = u.id;
-            document.getElementById("usuario-nombre").value = u.nombre;
-            document.getElementById("usuario-apellido").value = u.apellido;
-            document.getElementById("usuario-correo").value = u.correo;
-            document.getElementById("usuario-rol").value = u.rol;
-            document.getElementById("usuario-password").value = "";
-            document.getElementById("usuario-password").required = false;
-            document.getElementById("btn-guardar-usuario").textContent = "Actualizar usuario";
-            document.getElementById("btn-cancelar-usuario").hidden = false;
+        function abrirModalUsuario(u) {
+            usuarioIdEditar.value = u.id;
+            nombreEdit.value = u.nombre;
+            apellidoEdit.value = u.apellido;
+            correoEdit.value = u.correo;
+            passwordEdit.value = "";
+            rolEdit.value = u.rol;
+            limpiarMensaje();
+            modalUsuario.hidden = false;
+            modalUsuario.focus();
         }
+
+        function cerrarModalUsuario() {
+            modalUsuario.hidden = true;
+            formularioUsuarioEditar.reset();
+        }
+
+        modalUsuario.tabIndex = -1;
+        btnCerrarModal.addEventListener("click", cerrarModalUsuario);
+        btnCancelarEditar.addEventListener("click", cerrarModalUsuario);
+        modalUsuario.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") cerrarModalUsuario();
+        });
+        modalUsuario.addEventListener("click", (event) => {
+            if (event.target === modalUsuario) cerrarModalUsuario();
+        });
+
+        formularioUsuarioEditar.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const id = usuarioIdEditar.value;
+            const datos = {
+                nombre: nombreEdit.value.trim(),
+                apellido: apellidoEdit.value.trim(),
+                correo: correoEdit.value.trim(),
+                rol: rolEdit.value
+            };
+
+            if (passwordEdit.value) {
+                datos.password = passwordEdit.value;
+            }
+
+            if (!datos.nombre || !datos.apellido || !datos.correo) {
+                mostrarMensaje("Nombre, apellido y correo son obligatorios.", "error");
+                return;
+            }
+
+            try {
+                const respuesta = await fetch(`${API_URL}/usuarios/${id}`, {
+                    method: "PUT",
+                    headers: obtenerHeaders(),
+                    body: JSON.stringify(datos)
+                });
+
+                if (!respuesta.ok) {
+                    const error = await respuesta.json();
+                    mostrarMensaje(error.mensaje || "No se pudo actualizar el usuario.", "error");
+                    return;
+                }
+
+                mostrarToast("Usuario actualizado con éxito.", "exito");
+                cerrarModalUsuario();
+                cargarUsuarios();
+                mostrarMensaje("Usuario actualizado correctamente.", "exito");
+
+            } catch (error) {
+                mostrarMensaje("No se pudo conectar con el servidor.", "error");
+            }
+        });
 
         async function eliminarUsuario(id) {
             if (!confirm("¿Seguro que deseas eliminar este usuario?")) return;
@@ -1134,29 +1280,71 @@ function initAdmin() {
 
     function adminClientes() {
         const formulario = document.getElementById("formulario-cliente");
-        const clienteId = document.getElementById("cliente-id");
         const nombreInput = document.getElementById("cliente-nombre");
-        const documentoInput = document.getElementById("cliente-documento");
-        const correoInput = document.getElementById("cliente-correo");
-        const telefonoInput = document.getElementById("cliente-telefono");
-        const btnGuardar = document.getElementById("btn-guardar");
-        const btnCancelar = document.getElementById("btn-cancelar");
-        const tituloFormulario = document.getElementById("titulo-formulario");
+        const tipoInput = document.getElementById("cliente-tipo");
+        const nitInput = document.getElementById("cliente-nit");
+        const representanteInput = document.getElementById("cliente-representante");
+        const direccionInput = document.getElementById("cliente-direccion");
+
+        const modal = document.getElementById("modal-cliente");
+        const formularioEditar = document.getElementById("formulario-cliente-editar");
+        const idEdicion = document.getElementById("cliente-id-editar");
+        const nombreEdit = document.getElementById("cliente-nombre-editar");
+        const tipoEdit = document.getElementById("cliente-tipo-editar");
+        const nitEdit = document.getElementById("cliente-nit-editar");
+        const representanteEdit = document.getElementById("cliente-representante-editar");
+        const direccionEdit = document.getElementById("cliente-direccion-editar");
+        const btnCerrarModal = document.getElementById("btn-cerrar-modal");
+        const btnCancelarEditar = document.getElementById("btn-cancelar-editar");
+
         const tableroClientes = document.getElementById("cuerpo-clientes");
         const contadorClientes = document.getElementById("contador-clientes");
         const buscador = document.getElementById("buscador-admin");
+        const filtroTipo = document.getElementById("filtro-tipo-cliente");
 
         let clientes = [];
 
-        function cancelarEdicion() {
-            clienteId.value = "";
-            formulario.reset();
-            tituloFormulario.textContent = "Nuevo cliente";
-            btnGuardar.textContent = "Guardar cliente";
-            btnCancelar.hidden = true;
+        function sincronizarRepresentante(select, input) {
+            input.disabled = select.value === "Natural";
+            if (select.value === "Natural") input.value = "";
         }
 
-        btnCancelar.addEventListener("click", cancelarEdicion);
+        tipoInput.addEventListener("change", () => sincronizarRepresentante(tipoInput, representanteInput));
+        tipoEdit.addEventListener("change", () => sincronizarRepresentante(tipoEdit, representanteEdit));
+        sincronizarRepresentante(tipoInput, representanteInput);
+
+        function resetearFormulario() {
+            formulario.reset();
+            sincronizarRepresentante(tipoInput, representanteInput);
+        }
+
+        function abrirModal(cliente) {
+            idEdicion.value = cliente.id;
+            nombreEdit.value = cliente.nombre;
+            tipoEdit.value = cliente.tipo_cliente;
+            nitEdit.value = cliente.nit_cc;
+            representanteEdit.value = cliente.representante_legal || "";
+            direccionEdit.value = cliente.direccion || "";
+            sincronizarRepresentante(tipoEdit, representanteEdit);
+            limpiarMensaje();
+            modal.hidden = false;
+            modal.focus();
+        }
+
+        function cerrarModal() {
+            modal.hidden = true;
+            formularioEditar.reset();
+        }
+
+        modal.tabIndex = -1;
+        btnCerrarModal.addEventListener("click", cerrarModal);
+        btnCancelarEditar.addEventListener("click", cerrarModal);
+        modal.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") cerrarModal();
+        });
+        modal.addEventListener("click", (event) => {
+            if (event.target === modal) cerrarModal();
+        });
 
         async function cargarClientes() {
             limpiarMensaje();
@@ -1199,9 +1387,9 @@ function initAdmin() {
                 const celdas = [
                     cliente.id,
                     cliente.nombre,
-                    cliente.documento,
-                    cliente.correo || "-",
-                    cliente.telefono || "-"
+                    cliente.tipo_cliente,
+                    cliente.nit_cc,
+                    cliente.representante_legal || "-"
                 ];
 
                 celdas.forEach((valor) => {
@@ -1215,7 +1403,7 @@ function initAdmin() {
                 const btnEditar = document.createElement("button");
                 btnEditar.className = "boton-editar";
                 btnEditar.textContent = "Editar";
-                btnEditar.addEventListener("click", () => comenzarEdicion(cliente));
+                btnEditar.addEventListener("click", () => abrirModal(cliente));
 
                 const btnEliminar = document.createElement("button");
                 btnEliminar.className = "boton-eliminar";
@@ -1230,45 +1418,28 @@ function initAdmin() {
             });
         }
 
-        function comenzarEdicion(cliente) {
-            clienteId.value = cliente.id;
-            nombreInput.value = cliente.nombre;
-            documentoInput.value = cliente.documento;
-            correoInput.value = cliente.correo || "";
-            telefonoInput.value = cliente.telefono || "";
-            tituloFormulario.textContent = "Editar cliente";
-            btnGuardar.textContent = "Actualizar cliente";
-            btnCancelar.hidden = false;
-            limpiarMensaje();
-        }
-
         formulario.addEventListener("submit", async (event) => {
             event.preventDefault();
 
             const datos = {
                 nombre: nombreInput.value.trim(),
-                documento: documentoInput.value.trim(),
-                correo: correoInput.value.trim(),
-                telefono: telefonoInput.value.trim()
+                tipo_cliente: tipoInput.value,
+                nit_cc: nitInput.value.trim(),
+                representante_legal: representanteInput.value.trim() || null,
+                direccion: direccionInput.value.trim() || null
             };
 
-            if (!datos.nombre || !datos.documento) {
-                mostrarMensaje("El nombre y el documento son obligatorios.", "error");
+            if (!datos.nombre || !datos.tipo_cliente || !datos.nit_cc) {
+                mostrarMensaje("El nombre, el tipo y el NIT/CC son obligatorios.", "error");
                 return;
             }
 
-            const idEdicion = clienteId.value;
-            const esEdicion = idEdicion !== "";
-
             try {
-                const respuesta = await fetch(
-                    esEdicion ? `${API_URL}/clientes/${idEdicion}` : `${API_URL}/clientes`,
-                    {
-                        method: esEdicion ? "PUT" : "POST",
-                        headers: obtenerHeaders(),
-                        body: JSON.stringify(datos)
-                    }
-                );
+                const respuesta = await fetch(`${API_URL}/clientes`, {
+                    method: "POST",
+                    headers: obtenerHeaders(),
+                    body: JSON.stringify(datos)
+                });
 
                 if (!respuesta.ok) {
                     const error = await respuesta.json();
@@ -1276,8 +1447,48 @@ function initAdmin() {
                     return;
                 }
 
-                mostrarMensaje(esEdicion ? "Cliente actualizado correctamente." : "Cliente guardado en la base de datos.", "exito");
-                cancelarEdicion();
+                mostrarMensaje("Cliente guardado en la base de datos.", "exito");
+                resetearFormulario();
+                cargarClientes();
+
+            } catch (error) {
+                mostrarMensaje("No se pudo conectar con el servidor.", "error");
+            }
+        });
+
+        formularioEditar.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const id = idEdicion.value;
+
+            const datos = {
+                nombre: nombreEdit.value.trim(),
+                tipo_cliente: tipoEdit.value,
+                nit_cc: nitEdit.value.trim(),
+                representante_legal: representanteEdit.value.trim() || null,
+                direccion: direccionEdit.value.trim() || null
+            };
+
+            if (!datos.nombre || !datos.tipo_cliente || !datos.nit_cc) {
+                mostrarMensaje("El nombre, el tipo y el NIT/CC son obligatorios.", "error");
+                return;
+            }
+
+            try {
+                const respuesta = await fetch(`${API_URL}/clientes/${id}`, {
+                    method: "PUT",
+                    headers: obtenerHeaders(),
+                    body: JSON.stringify(datos)
+                });
+
+                if (!respuesta.ok) {
+                    const error = await respuesta.json();
+                    mostrarMensaje(error.mensaje || "No se pudo actualizar el cliente.", "error");
+                    return;
+                }
+
+                mostrarMensaje("Cliente actualizado correctamente.", "exito");
+                cerrarModal();
                 cargarClientes();
 
             } catch (error) {
@@ -1308,13 +1519,19 @@ function initAdmin() {
             }
         }
 
-        buscador.addEventListener("input", () => {
+        function aplicarFiltros() {
             const termino = buscador.value.trim().toLowerCase();
-            const filtrados = clientes.filter((cliente) =>
-                `${cliente.nombre} ${cliente.documento} ${cliente.correo} ${cliente.telefono}`.toLowerCase().includes(termino)
-            );
+            const tipo = filtroTipo.value;
+            const filtrados = clientes.filter((cliente) => {
+                const coincideTexto = `${cliente.nombre} ${cliente.tipo_cliente} ${cliente.nit_cc} ${cliente.representante_legal || ""}`.toLowerCase().includes(termino);
+                const coincideTipo = !tipo || cliente.tipo_cliente === tipo;
+                return coincideTexto && coincideTipo;
+            });
             renderizarClientes(filtrados);
-        });
+        }
+
+        buscador.addEventListener("input", aplicarFiltros);
+        filtroTipo.addEventListener("change", aplicarFiltros);
 
         cargarClientes();
     }

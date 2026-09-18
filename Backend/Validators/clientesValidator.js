@@ -2,8 +2,9 @@ const {body} = require("express-validator");
 
 const validarCliente = [
     body("nombre").trim().notEmpty().withMessage("el nombre es obligatorio"),
-    body("documento").trim().notEmpty().withMessage("el documento es obligatorio"),
-    body("correo").optional({checkFalsy: true}).isEmail().withMessage("debe ingresar un correo valido")
+    body("tipo_cliente").notEmpty().withMessage("el tipo de cliente es obligatorio")
+        .isIn(["Natural", "Juridico"]).withMessage("el tipo de cliente debe ser Natural o Juridico"),
+    body("nit_cc").trim().notEmpty().withMessage("el NIT/CC es obligatorio")
 ];
 
 module.exports = {
