@@ -248,6 +248,12 @@ function templateCrear() {
                             </div>
                         </form>
                     </div>
+
+                    <div class="panel panel-clausulas" id="panel-clausulas" hidden>
+                        <h2 class="panel-titulo">Cláusulas del contrato</h2>
+                        <p class="panel-descripcion">Marca o desmarca las cláusulas que quieras incluir. Al desmarcar una, el resto se renumera por orden de selección.</p>
+                        <div class="clausulas-lista" id="clausulas-lista"></div>
+                    </div>
                 </section>
 
                 <aside class="contrato-preview">
@@ -667,9 +673,25 @@ function initCrear() {
     const contratoDescripcion = document.getElementById("contrato-descripcion");
     const previewTitulo = document.getElementById("preview-titulo");
     const previewHtml = document.getElementById("preview-html");
+    const panelClausulas = document.getElementById("panel-clausulas");
+    const clausulasLista = document.getElementById("clausulas-lista");
 
     let temporizadorBusqueda = null;
     let plantillaHtmlCruda = "";
+    let clausulas = [];
+
+    const ORDINALES_CLAUSULA = ["", "PRIMERA", "SEGUNDA", "TERCERA", "CUARTA", "QUINTA", "SEXTA",
+        "SÉPTIMA", "OCTAVA", "NOVENA", "DÉCIMA", "DÉCIMA PRIMERA", "DÉCIMA SEGUNDA", "DÉCIMA TERCERA",
+        "DÉCIMA CUARTA", "DÉCIMA QUINTA", "DÉCIMA SEXTA", "DÉCIMA SÉPTIMA", "DÉCIMA OCTAVA",
+        "DÉCIMA NOVENA", "VIGÉSIMA", "VIGÉSIMA PRIMERA", "VIGÉSIMA SEGUNDA", "VIGÉSIMA TERCERA",
+        "VIGÉSIMA CUARTA", "VIGÉSIMA QUINTA", "VIGÉSIMA SEXTA", "VIGÉSIMA SÉPTIMA", "VIGÉSIMA OCTAVA",
+        "VIGÉSIMA NOVENA", "TRIGÉSIMA", "TRIGÉSIMA PRIMERA", "TRIGÉSIMA SEGUNDA", "TRIGÉSIMA TERCERA",
+        "TRIGÉSIMA CUARTA", "TRIGÉSIMA QUINTA", "TRIGÉSIMA SEXTA", "TRIGÉSIMA SÉPTIMA", "TRIGÉSIMA OCTAVA",
+        "TRIGÉSIMA NOVENA", "CUADRAGÉSIMA", "CUADRAGÉSIMA PRIMERA"];
+
+    function ordinalClausula(n) {
+        return ORDINALES_CLAUSULA[n] || String(n);
+    }
 
     async function buscar(termino) {
         resultados.innerHTML = '<p class="servicio-busqueda">Buscando...</p>';
@@ -786,6 +808,9 @@ function initCrear() {
         contratoEstado.value = "";
         contratoDescripcion.value = "";
         plantillaHtmlCruda = "";
+        clausulas = [];
+        panelClausulas.hidden = true;
+        clausulasLista.innerHTML = "";
 
         previewTitulo.textContent = "Vista previa del contrato";
         previewHtml.innerHTML = '<p class="servicio-busqueda">Selecciona una plantilla para ver su contenido</p>';
@@ -841,6 +866,7 @@ function initCrear() {
             const contenido = await respuesta.json();
             previewTitulo.textContent = contenido.name || "Vista previa del contrato";
             plantillaHtmlCruda = contenido.html || "";
+            await cargarClausulas();
             renderizarPreviewConDatos();
 
         } catch (error) {
@@ -894,6 +920,97 @@ function initCrear() {
         return `${numeroALetras(dias)} (${dias}) DÍAS`;
     }
 
+    async function cargarClausulas() {
+        try {
+            const respuesta = await fetch(`${API_URL}/clausulas`, { headers: obtenerHeaders() });
+
+            if (!respuesta.ok) {
+                const error = await respuesta.json().catch(() => null);
+                throw new Error(error?.mensaje || "No se pudieron obtener las cláusulas");
+            }
+
+            const datos = await respuesta.json();
+            clausulas = datos.map((c) => ({
+                id: c.id,
+                titulo: c.titulo,
+                contenido: c.contenido,
+                seleccionada: true
+            }));
+            renderListaClausulas();
+
+        } catch (error) {
+            clausulas = [];
+            panelClausulas.hidden = true;
+            clausulasLista.innerHTML = "";
+            console.error(error.message);
+        }
+    }
+
+    function renderListaClausulas() {
+        if (clausulas.length === 0) {
+            panelClausulas.hidden = true;
+            clausulasLista.innerHTML = "";
+            return;
+        }
+
+        panelClausulas.hidden = false;
+        clausulasLista.innerHTML = "";
+
+        const seleccionadas = clausulas.filter((c) => c.seleccionada);
+
+        clausulas.forEach((clausula) => {
+            const posicion = seleccionadas.indexOf(clausula) + 1;
+
+            const etiqueta = document.createElement("label");
+            etiqueta.className = "clausula-item" + (clausula.seleccionada ? "" : " clausula-no-seleccionada");
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.className = "clausula-checkbox";
+            checkbox.checked = clausula.seleccionada;
+            checkbox.addEventListener("change", () => {
+                clausula.seleccionada = checkbox.checked;
+                renderListaClausulas();
+                renderizarPreviewConDatos();
+            });
+
+            const titulo = document.createElement("span");
+            titulo.className = "clausula-titulo";
+            titulo.textContent = clausula.titulo;
+
+            const numero = document.createElement("span");
+            numero.className = "clausula-numero";
+            if (clausula.seleccionada) {
+                numero.textContent = ordinalClausula(posicion);
+                numero.title = `Posición ${posicion} en el contrato`;
+            } else {
+                numero.textContent = "No incluida";
+            }
+
+            etiqueta.appendChild(checkbox);
+            etiqueta.appendChild(titulo);
+            etiqueta.appendChild(numero);
+            clausulasLista.appendChild(etiqueta);
+        });
+    }
+
+    function construirHtmlContrato() {
+        if (!plantillaHtmlCruda) return "";
+
+        const indiceClausulas = plantillaHtmlCruda.indexOf("<p><strong>CLÁUSULA");
+        const preambulo = indiceClausulas === -1
+            ? plantillaHtmlCruda
+            : plantillaHtmlCruda.slice(0, indiceClausulas);
+
+        const seleccionadas = clausulas.filter((c) => c.seleccionada);
+
+        const cuerpo = seleccionadas.map((clausula, posicion) =>
+            `<p><strong>CLÁUSULA ${ordinalClausula(posicion + 1)}. ${escaparHTML(clausula.titulo)}:</strong> ${clausula.contenido}`
+        ).join("");
+
+        return preambulo + cuerpo;
+    }
+
     function renderizarPreviewConDatos() {
         if (!plantillaHtmlCruda) return;
 
@@ -901,10 +1018,11 @@ function initCrear() {
             "[CLIENTE]": escaparHTML(clienteSeleccionado ? clienteSeleccionado.nombre : ""),
             "[VALOR]": escaparHTML(formatearMoneda(contratoMonto.value)),
             "[PLAZO]": escaparHTML(calcularPlazo()),
-            "[DESCRIPCION]": escaparHTML(contratoDescripcion.value)
+            "[DESCRIPCION]": escaparHTML(contratoDescripcion.value),
+            "[OBJETO]": escaparHTML(contratoDescripcion.value)
         };
 
-        let resultado = plantillaHtmlCruda;
+        let resultado = construirHtmlContrato();
         Object.keys(reemplazos).forEach((marcador) => {
             const valor = reemplazos[marcador] || marcador;
             resultado = resultado.split(marcador).join(valor);

@@ -6,6 +6,7 @@ const authRoutes = require("./Routes/auth");
 const clientesRoutes = require("./Routes/clientes");
 const buscarClienteRoutes = require("./Routes/buscarCliente");
 const plantillasRoutes = require("./Routes/plantillas");
+const clausulasRoutes = require("./Routes/clausulas");
 require("dotenv").config();
 
 const app = express();
@@ -18,6 +19,7 @@ app.use("/auth", authRoutes);
 app.use("/clientes", clientesRoutes);
 app.use("/buscar-cliente", buscarClienteRoutes);
 app.use("/plantillas", plantillasRoutes);
+app.use("/clausulas", clausulasRoutes);
 
 app.use((err, req, res, next) => {
     console.error("ERROR NO MANEJADO:", err);

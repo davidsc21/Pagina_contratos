@@ -316,6 +316,65 @@
   min-width: 0;
 }
 
+.panel-clausulas {
+  margin-top: 1.5rem;
+}
+
+.clausulas-lista {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-right: 0.25rem;
+}
+
+.clausula-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #e3e8e5;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.82rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.clausula-item:hover {
+  border-color: var(--green-dark);
+}
+
+.clausula-no-seleccionada {
+  opacity: 0.55;
+}
+
+.clausula-checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--green-dark);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.clausula-titulo {
+  flex: 1;
+  min-width: 0;
+  color: var(--green-darker);
+}
+
+.clausula-numero {
+  flex-shrink: 0;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background-color: var(--green-dark);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
 .formulario-contrato {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

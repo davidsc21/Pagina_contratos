@@ -27,6 +27,17 @@ CREATE TABLE IF NOT EXISTS cliente (
 );
 
 -- ============================================================
+-- Tabla de cláusulas seleccionables de los contratos
+-- (titulo y contenido, sin número; el número se asigna por orden)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS clausulas (
+    id SERIAL PRIMARY KEY,
+    titulo VARCHAR(200) NOT NULL,
+    contenido TEXT NOT NULL
+);
+
+-- ============================================================
 -- Para crear un usuario administrador ejecuta:
 --
 --   UPDATE usuarios SET rol = 'admin'
