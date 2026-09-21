@@ -447,6 +447,43 @@
   line-height: 1.6;
 }
 
+.objetivo-ia {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.45rem;
+}
+
+.btn-objetivo-ia {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--star-yellow);
+  background: none;
+  color: #8a6d00;
+  border-radius: 7px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-objetivo-ia:hover {
+  background-color: var(--star-yellow);
+  color: #ffffff;
+}
+
+.btn-objetivo-ia:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.objetivo-general {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--green-darker);
+}
+
 .formulario-contrato {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

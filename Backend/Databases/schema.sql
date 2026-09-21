@@ -38,6 +38,23 @@ CREATE TABLE IF NOT EXISTS clausulas (
 );
 
 -- ============================================================
+-- Tipos de contrato y sus plantillas de Drive
+-- (permite agregar más tipos en el futuro sin tocar el código)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS tipos_contrato (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS plantillas (
+    id SERIAL PRIMARY KEY,
+    tipo_id INTEGER NOT NULL REFERENCES tipos_contrato(id) ON DELETE CASCADE,
+    archivo_id VARCHAR(200) NOT NULL UNIQUE,
+    nombre VARCHAR(255) NOT NULL
+);
+
+-- ============================================================
 -- Para crear un usuario administrador ejecuta:
 --
 --   UPDATE usuarios SET rol = 'admin'

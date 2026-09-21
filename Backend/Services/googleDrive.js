@@ -54,13 +54,21 @@ async function listarPlantillas() {
     return res.data.files || [];
 }
 
-async function obtenerContenido(fileId) {
+async function obtenerMetadatos(fileId) {
     const d = obtenerDrive();
     if (!d) throw new Error(configError || "Google Drive no configurado");
 
     const meta = await d.files.get({fileId, fields: "id, name, mimeType"});
-    const nombre = meta.data.name;
-    const mime = meta.data.mimeType;
+    return meta.data;
+}
+
+async function obtenerContenido(fileId) {
+    const d = obtenerDrive();
+    if (!d) throw new Error(configError || "Google Drive no configurado");
+
+    const meta = await obtenerMetadatos(fileId);
+    const nombre = meta.name;
+    const mime = meta.mimeType;
 
     if (mime === "application/vnd.google-apps.document") {
         const res = await d.files.export({fileId, mimeType: "text/html"});
@@ -88,4 +96,4 @@ async function obtenerContenido(fileId) {
     throw new Error(`Formato no soportado: ${mime}`);
 }
 
-module.exports = {listarPlantillas, obtenerContenido, obtenerErrorConfig};
+module.exports = {listarPlantillas, obtenerMetadatos, obtenerContenido, obtenerErrorConfig};

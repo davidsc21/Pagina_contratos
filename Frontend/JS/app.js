@@ -200,14 +200,13 @@ function templateCrear() {
                                 <label for="contrato-tipo">Tipo de contrato</label>
                                 <select id="contrato-tipo" class="filtro-estado">
                                     <option value="">Selecciona un tipo...</option>
-                                    <option value="Prestacion de servicios">Prestación de servicios</option>
                                 </select>
                             </div>
 
                             <div class="campo-formulario">
                                 <label for="contrato-plantilla">Plantilla de contrato</label>
-                                <select id="contrato-plantilla" class="filtro-estado">
-                                    <option value="">Selecciona una plantilla...</option>
+                                <select id="contrato-plantilla" class="filtro-estado" disabled>
+                                    <option value="">Selecciona primero el tipo de contrato</option>
                                 </select>
                             </div>
 
@@ -245,13 +244,17 @@ function templateCrear() {
                             <div class="campo-formulario campo-completo">
                                 <label for="contrato-descripcion">Descripción / Objeto del contrato</label>
                                 <textarea id="contrato-descripcion" rows="3" placeholder="Describe el objeto del contrato..."></textarea>
+                                <div class="objetivo-ia">
+                                    <button type="button" class="btn-objetivo-ia" id="btn-objetivo-ia">Generar título con IA</button>
+                                    <span class="objetivo-general" id="objetivo-general"></span>
+                                </div>
                             </div>
                         </form>
                     </div>
 
                     <div class="panel panel-clausulas" id="panel-clausulas" hidden>
                         <h2 class="panel-titulo">Cláusulas del contrato</h2>
-                        <p class="panel-descripcion">Marca o desmarca las cláusulas que quieras incluir: se numera 1, 2, 3... en orden de lista y se agregan tras el preámbulo. Usa "IA" para adaptar una cláusula al objetivo del contrato y "Editar" para modificar su texto; ambos cambios solo aplican a este contrato.</p>
+                        <p class="panel-descripcion">La cláusula de OBJETO siempre queda de primera y las cláusulas legales fijas se mantienen. Marca las cláusulas que quieras: se numeran al final, antes de las firmas. Usa "IA" para adaptarlas al objetivo y "Editar" para modificar su texto; ambos cambios solo aplican a este contrato.</p>
                         <div class="clausulas-lista" id="clausulas-lista"></div>
                     </div>
                 </section>
@@ -695,6 +698,8 @@ function initCrear() {
     const contratoMonto = document.getElementById("contrato-monto");
     const contratoEstado = document.getElementById("contrato-estado");
     const contratoDescripcion = document.getElementById("contrato-descripcion");
+    const btnObjetivoIA = document.getElementById("btn-objetivo-ia");
+    const objetivoGeneralTexto = document.getElementById("objetivo-general");
     const previewTitulo = document.getElementById("preview-titulo");
     const previewHtml = document.getElementById("preview-html");
     const panelClausulas = document.getElementById("panel-clausulas");
@@ -710,6 +715,7 @@ function initCrear() {
     let plantillaHtmlCruda = "";
     let clausulas = [];
     let clausulaEnEdicion = null;
+    let objetivoGeneral = "";
 
     async function buscar(termino) {
         resultados.innerHTML = '<p class="servicio-busqueda">Buscando...</p>';
@@ -818,7 +824,8 @@ function initCrear() {
 
     function resetearFormularioContrato() {
         contratoTipo.value = "";
-        contratoPlantilla.innerHTML = '<option value="">Selecciona una plantilla...</option>';
+        contratoPlantilla.disabled = true;
+        contratoPlantilla.innerHTML = '<option value="">Selecciona primero el tipo de contrato</option>';
         contratoNumero.value = "";
         contratoInicio.value = "";
         contratoVencimiento.value = "";
@@ -827,6 +834,8 @@ function initCrear() {
         contratoDescripcion.value = "";
         plantillaHtmlCruda = "";
         clausulas = [];
+        objetivoGeneral = "";
+        objetivoGeneralTexto.textContent = "";
         panelClausulas.hidden = true;
         clausulasLista.innerHTML = "";
 
@@ -838,13 +847,49 @@ function initCrear() {
         return nombre.replace(/\.(docx?|txt|rtf)$/i, "").replace(/\./g, " ");
     }
 
-    async function cargarPlantillas() {
-        previewTitulo.textContent = "Vista previa del contrato";
-        previewHtml.innerHTML = '<p class="servicio-busqueda">Selecciona una plantilla para ver su contenido</p>';
-        contratoPlantilla.innerHTML = '<option value="">Selecciona una plantilla...</option>';
+    async function cargarTiposContrato() {
+        contratoTipo.innerHTML = '<option value="">Selecciona un tipo...</option>';
 
         try {
-            const respuesta = await fetch(`${API_URL}/plantillas`, { headers: obtenerHeaders() });
+            const respuesta = await fetch(`${API_URL}/plantillas/tipos`, { headers: obtenerHeaders() });
+
+            if (!respuesta.ok) {
+                const error = await respuesta.json().catch(() => null);
+                throw new Error(error?.mensaje || "No se pudieron obtener los tipos de contrato");
+            }
+
+            const tipos = await respuesta.json();
+
+            tipos.forEach((tipo) => {
+                const opcion = document.createElement("option");
+                opcion.value = tipo.id;
+                opcion.textContent = tipo.nombre;
+                contratoTipo.appendChild(opcion);
+            });
+
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
+
+    async function cargarPlantillas(tipoId) {
+        previewTitulo.textContent = "Vista previa del contrato";
+        previewHtml.innerHTML = '<p class="servicio-busqueda">Selecciona una plantilla para ver su contenido</p>';
+
+        if (!tipoId) {
+            contratoPlantilla.disabled = true;
+            contratoPlantilla.innerHTML = '<option value="">Selecciona primero el tipo de contrato</option>';
+            return;
+        }
+
+        contratoPlantilla.disabled = true;
+        contratoPlantilla.innerHTML = '<option value="">Cargando plantillas...</option>';
+
+        try {
+            const respuesta = await fetch(
+                `${API_URL}/plantillas?tipo=${encodeURIComponent(tipoId)}`,
+                { headers: obtenerHeaders() }
+            );
 
             if (!respuesta.ok) {
                 const error = await respuesta.json().catch(() => null);
@@ -854,9 +899,11 @@ function initCrear() {
             const plantillas = await respuesta.json();
 
             if (plantillas.length === 0) {
-                previewHtml.innerHTML = '<p class="servicio-busqueda">No hay plantillas en la carpeta de Drive</p>';
+                contratoPlantilla.innerHTML = '<option value="">No hay plantillas para este tipo</option>';
                 return;
             }
+
+            contratoPlantilla.innerHTML = '<option value="">Selecciona una plantilla...</option>';
 
             plantillas.forEach((plantilla) => {
                 const opcion = document.createElement("option");
@@ -865,9 +912,20 @@ function initCrear() {
                 contratoPlantilla.appendChild(opcion);
             });
 
+            contratoPlantilla.disabled = false;
+
         } catch (error) {
+            contratoPlantilla.innerHTML = '<option value="">Error al cargar las plantillas</option>';
             previewHtml.innerHTML = `<p class="servicio-busqueda">${error.message}</p>`;
         }
+    }
+
+    function limpiarPlantilla() {
+        plantillaHtmlCruda = "";
+        clausulas = [];
+        renderListaClausulas();
+        previewTitulo.textContent = "Vista previa del contrato";
+        previewHtml.innerHTML = '<p class="servicio-busqueda">Selecciona una plantilla para ver su contenido</p>';
     }
 
     async function cargarContenidoPlantilla(id) {
@@ -970,7 +1028,7 @@ function initCrear() {
                 id: c.id,
                 titulo: c.titulo,
                 contenido: c.contenido,
-                seleccionada: true
+                seleccionada: false
             }));
             renderListaClausulas();
 
@@ -1133,19 +1191,78 @@ function initCrear() {
         }
     }
 
+    async function generarObjetivoConIA() {
+        const objetivo = contratoDescripcion.value.trim();
+        if (!objetivo) {
+            mostrarToast("Escribe la descripción / objeto del contrato antes de generar el título", "error");
+            return;
+        }
+
+        const textoOriginal = btnObjetivoIA.textContent;
+        btnObjetivoIA.disabled = true;
+        btnObjetivoIA.textContent = "Generando...";
+
+        try {
+            const respuesta = await fetch(`${API_URL}/ia/objetivo-general`, {
+                method: "POST",
+                headers: { ...obtenerHeaders(), "Content-Type": "application/json" },
+                body: JSON.stringify({ objetivo })
+            });
+
+            if (!respuesta.ok) {
+                const error = await respuesta.json().catch(() => null);
+                throw new Error(error?.mensaje || "Error al generar el título");
+            }
+
+            const datos = await respuesta.json();
+            const texto = (datos.texto || "").trim();
+            if (!texto) throw new Error("La IA no devolvió contenido");
+
+            objetivoGeneral = texto;
+            objetivoGeneralTexto.textContent = objetivoGeneral;
+            renderizarPreviewConDatos();
+            mostrarToast("Título generado con IA", "exito");
+
+        } catch (error) {
+            mostrarToast(error.message, "error");
+        } finally {
+            btnObjetivoIA.disabled = false;
+            btnObjetivoIA.textContent = textoOriginal;
+        }
+    }
+
+    btnObjetivoIA.addEventListener("click", generarObjetivoConIA);
+
+    contratoDescripcion.addEventListener("input", () => {
+        if (objetivoGeneral) {
+            objetivoGeneral = "";
+            objetivoGeneralTexto.textContent = "";
+        }
+    });
+
     function construirHtmlContrato() {
         if (!plantillaHtmlCruda) return "";
 
         const indiceClausulas = plantillaHtmlCruda.indexOf("<p><strong>CLÁUSULA");
-        const preambulo = indiceClausulas === -1
-            ? plantillaHtmlCruda
-            : plantillaHtmlCruda.slice(0, indiceClausulas);
+        if (indiceClausulas === -1) return plantillaHtmlCruda;
 
-        const seleccionadas = clausulas.filter((c) => c.seleccionada);
+        const preambulo = plantillaHtmlCruda.slice(0, indiceClausulas);
+        let cuerpo = plantillaHtmlCruda.slice(indiceClausulas);
 
-        const cuerpo = seleccionadas.map((clausula, posicion) =>
-            `<p><strong>CLÁUSULA ${posicion + 1}. ${escaparHTML(clausula.titulo)}:</strong> ${clausula.contenido}`
+        cuerpo = cuerpo.replace(
+            "<p><strong>CLÁUSULA PRIMERA. OBJETO:</strong>",
+            "<p><strong>CLÁUSULA 1. OBJETO:</strong>"
+        );
+
+        let numeroFijo = 1;
+        cuerpo = cuerpo.replace(/\[numero\]/g, () => String(++numeroFijo));
+
+        const extras = clausulas.filter((c) => c.seleccionada);
+        const bloqueExtras = extras.map((clausula, posicion) =>
+            `<p><strong>CLÁUSULA ${numeroFijo + posicion + 1}. ${escaparHTML(clausula.titulo)}:</strong> ${clausula.contenido}`
         ).join("");
+
+        cuerpo = cuerpo.replace(/<p><strong>\[Clausula extra\]<\/strong><\/p>/, bloqueExtras);
 
         return preambulo + cuerpo;
     }
@@ -1155,10 +1272,14 @@ function initCrear() {
 
         const reemplazos = {
             "[CLIENTE]": escaparHTML(clienteSeleccionado ? clienteSeleccionado.nombre : ""),
+            "[NIT]": escaparHTML(clienteSeleccionado ? clienteSeleccionado.nit_cc : ""),
+            "[DIRECCION]": escaparHTML(clienteSeleccionado ? clienteSeleccionado.direccion : ""),
             "[VALOR]": escaparHTML(formatearMoneda(contratoMonto.value)),
             "[PLAZO]": escaparHTML(calcularPlazo()),
             "[DESCRIPCION]": escaparHTML(contratoDescripcion.value),
-            "[OBJETO]": escaparHTML(contratoDescripcion.value)
+            "[OBJETO]": escaparHTML(contratoDescripcion.value),
+            "[contenido objeto]": escaparHTML(contratoDescripcion.value),
+            "[Objetivo_general]": escaparHTML(objetivoGeneral || contratoDescripcion.value)
         };
 
         let resultado = construirHtmlContrato();
@@ -1169,6 +1290,11 @@ function initCrear() {
 
         previewHtml.innerHTML = resultado;
     }
+
+    contratoTipo.addEventListener("change", () => {
+        limpiarPlantilla();
+        cargarPlantillas(contratoTipo.value);
+    });
 
     contratoPlantilla.addEventListener("change", () => {
         if (contratoPlantilla.value) cargarContenidoPlantilla(contratoPlantilla.value);
@@ -1191,7 +1317,7 @@ function initCrear() {
         }
         contratoClienteDatos.textContent = datos.join("   |   ");
 
-        cargarPlantillas();
+        cargarTiposContrato();
     }
 
     btnCambiar.addEventListener("click", () => {

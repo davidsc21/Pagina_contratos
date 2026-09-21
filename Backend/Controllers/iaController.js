@@ -1,4 +1,15 @@
-const { adaptarClausula } = require("../Services/gemini");
+const { adaptarClausula, generarObjetivoGeneral } = require("../Services/gemini");
+
+function responderError(res, error) {
+    const sinConfigurar = error.codigo === "IA_SIN_CONFIGURAR";
+    console.error("Error en /ia:", error.message);
+
+    return res.status(sinConfigurar ? 503 : (error.status || 500)).json({
+        mensaje: sinConfigurar
+            ? "La clave de Gemini no está configurada. Agrega GEMINI_API_KEY en Backend/.env"
+            : (error.message || "Error al procesar la solicitud")
+    });
+}
 
 async function adaptarClausulaCtrl(req, res) {
     try {
@@ -17,15 +28,28 @@ async function adaptarClausulaCtrl(req, res) {
         return res.json({ texto });
 
     } catch (error) {
-        const sinConfigurar = error.codigo === "IA_SIN_CONFIGURAR";
-        console.error("Error en /ia/adaptar-clausula:", error.message);
-
-        return res.status(sinConfigurar ? 503 : (error.status || 500)).json({
-            mensaje: sinConfigurar
-                ? "La clave de Gemini no está configurada. Agrega GEMINI_API_KEY en Backend/.env"
-                : (error.message || "Error al adaptar la cláusula")
-        });
+        return responderError(res, error);
     }
 }
 
-module.exports = { adaptarClausula: adaptarClausulaCtrl };
+async function generarObjetivoGeneralCtrl(req, res) {
+    try {
+        const { objetivo } = req.body || {};
+
+        if (typeof objetivo !== "string" || !objetivo.trim()) {
+            return res.status(400).json({ mensaje: "Se requiere el 'objetivo' del contrato" });
+        }
+
+        const texto = await generarObjetivoGeneral(objetivo.trim());
+
+        return res.json({ texto });
+
+    } catch (error) {
+        return responderError(res, error);
+    }
+}
+
+module.exports = {
+    adaptarClausula: adaptarClausulaCtrl,
+    generarObjetivoGeneral: generarObjetivoGeneralCtrl
+};
