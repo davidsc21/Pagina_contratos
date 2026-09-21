@@ -248,6 +248,13 @@ function templateCrear() {
                                     <button type="button" class="btn-objetivo-ia" id="btn-objetivo-ia">Generar título con IA</button>
                                     <span class="objetivo-general" id="objetivo-general"></span>
                                 </div>
+                                <div class="objetivo-ia">
+                                    <button type="button" class="btn-objetivo-ia" id="btn-consideraciones-ia">Generar consideraciones con IA</button>
+                                </div>
+                                <div class="consideraciones-bloque" id="consideraciones-bloque" hidden>
+                                    <label for="consideraciones-texto">Consideraciones <span class="nota-ia">(edítalas libremente; tus cambios se reflejan en la vista previa)</span></label>
+                                    <textarea id="consideraciones-texto" rows="8" placeholder="Consideraciones generadas por la IA..."></textarea>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -700,6 +707,9 @@ function initCrear() {
     const contratoDescripcion = document.getElementById("contrato-descripcion");
     const btnObjetivoIA = document.getElementById("btn-objetivo-ia");
     const objetivoGeneralTexto = document.getElementById("objetivo-general");
+    const btnConsideracionesIA = document.getElementById("btn-consideraciones-ia");
+    const consideracionesBloque = document.getElementById("consideraciones-bloque");
+    const consideracionesTexto = document.getElementById("consideraciones-texto");
     const previewTitulo = document.getElementById("preview-titulo");
     const previewHtml = document.getElementById("preview-html");
     const panelClausulas = document.getElementById("panel-clausulas");
@@ -716,6 +726,7 @@ function initCrear() {
     let clausulas = [];
     let clausulaEnEdicion = null;
     let objetivoGeneral = "";
+    let consideracionesGeneradas = "";
 
     async function buscar(termino) {
         resultados.innerHTML = '<p class="servicio-busqueda">Buscando...</p>';
@@ -836,6 +847,9 @@ function initCrear() {
         clausulas = [];
         objetivoGeneral = "";
         objetivoGeneralTexto.textContent = "";
+        consideracionesGeneradas = "";
+        consideracionesTexto.value = "";
+        consideracionesBloque.hidden = true;
         panelClausulas.hidden = true;
         clausulasLista.innerHTML = "";
 
@@ -1240,6 +1254,66 @@ function initCrear() {
         }
     });
 
+    async function generarConsideracionesConIA() {
+        const objetivo = contratoDescripcion.value.trim();
+        if (!objetivo) {
+            mostrarToast("Escribe la descripción / objeto del contrato antes de generar las consideraciones", "error");
+            return;
+        }
+        if (!clienteSeleccionado) {
+            mostrarToast("Selecciona un cliente antes de generar las consideraciones", "error");
+            return;
+        }
+
+        const textoOriginal = btnConsideracionesIA.textContent;
+        btnConsideracionesIA.disabled = true;
+        btnConsideracionesIA.textContent = "Generando...";
+
+        try {
+            const respuesta = await fetch(`${API_URL}/ia/consideraciones`, {
+                method: "POST",
+                headers: { ...obtenerHeaders(), "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    objetivo,
+                    contratante: "PALMAS DEL CESAR SAS (PALCESAR)",
+                    cliente: {
+                        nombre: clienteSeleccionado.nombre || "",
+                        nit_cc: clienteSeleccionado.nit_cc || "",
+                        direccion: clienteSeleccionado.direccion || ""
+                    }
+                })
+            });
+
+            if (!respuesta.ok) {
+                const error = await respuesta.json().catch(() => null);
+                throw new Error(error?.mensaje || "Error al generar las consideraciones");
+            }
+
+            const datos = await respuesta.json();
+            const texto = (datos.texto || "").trim();
+            if (!texto) throw new Error("La IA no devolvió contenido");
+
+            consideracionesGeneradas = texto;
+            consideracionesTexto.value = texto;
+            consideracionesBloque.hidden = false;
+            renderizarPreviewConDatos();
+            mostrarToast("Consideraciones generadas con IA", "exito");
+
+        } catch (error) {
+            mostrarToast(error.message, "error");
+        } finally {
+            btnConsideracionesIA.disabled = false;
+            btnConsideracionesIA.textContent = textoOriginal;
+        }
+    }
+
+    btnConsideracionesIA.addEventListener("click", generarConsideracionesConIA);
+
+    consideracionesTexto.addEventListener("input", () => {
+        consideracionesGeneradas = consideracionesTexto.value;
+        renderizarPreviewConDatos();
+    });
+
     function construirHtmlContrato() {
         if (!plantillaHtmlCruda) return "";
 
@@ -1283,6 +1357,11 @@ function initCrear() {
         };
 
         let resultado = construirHtmlContrato();
+
+        const consideracionesHtml = textoAHTML(consideracionesGeneradas);
+        const marcadorConsideraciones = "<p><strong>[CONSIDERACIONES]</strong></p>";
+        resultado = resultado.split(marcadorConsideraciones).join(consideracionesHtml);
+
         Object.keys(reemplazos).forEach((marcador) => {
             const valor = reemplazos[marcador] || marcador;
             resultado = resultado.split(marcador).join(valor);

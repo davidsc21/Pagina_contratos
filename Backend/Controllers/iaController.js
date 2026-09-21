@@ -1,4 +1,4 @@
-const { adaptarClausula, generarObjetivoGeneral } = require("../Services/gemini");
+const { adaptarClausula, generarObjetivoGeneral, generarConsideraciones } = require("../Services/gemini");
 
 function responderError(res, error) {
     const sinConfigurar = error.codigo === "IA_SIN_CONFIGURAR";
@@ -49,7 +49,29 @@ async function generarObjetivoGeneralCtrl(req, res) {
     }
 }
 
+async function generarConsideracionesCtrl(req, res) {
+    try {
+        const { objetivo, cliente, contratante } = req.body || {};
+
+        if (typeof objetivo !== "string" || !objetivo.trim()) {
+            return res.status(400).json({ mensaje: "Se requiere el 'objetivo' del contrato" });
+        }
+
+        const texto = await generarConsideraciones({
+            objetivo: objetivo.trim(),
+            cliente: cliente && typeof cliente === "object" ? cliente : null,
+            contratante: typeof contratante === "string" ? contratante : ""
+        });
+
+        return res.json({ texto });
+
+    } catch (error) {
+        return responderError(res, error);
+    }
+}
+
 module.exports = {
     adaptarClausula: adaptarClausulaCtrl,
-    generarObjetivoGeneral: generarObjetivoGeneralCtrl
+    generarObjetivoGeneral: generarObjetivoGeneralCtrl,
+    generarConsideraciones: generarConsideracionesCtrl
 };

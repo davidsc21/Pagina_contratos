@@ -81,4 +81,35 @@ async function generarObjetivoGeneral(objetivo) {
     return llamarGemini(prompt, 0.3);
 }
 
-module.exports = { adaptarClausula, generarObjetivoGeneral };
+async function generarConsideraciones({ objetivo, cliente, contratante }) {
+    const prompt = [
+        "Eres un abogado colombiano experto en redacción de contratos de prestación de servicios.",
+        "Redacta las CONSIDERACIONES (recitales) del contrato entre el CONTRATANTE y el CONTRATISTA.",
+        "",
+        "DATOS DEL CONTRATANTE:",
+        `"${contratante || "PALMAS DEL CESAR SAS (PALCESAR)"}"`,
+        "",
+        "DATOS DEL CONTRATISTA:",
+        `Nombre: ${cliente?.nombre || "(no indicado)"}`,
+        `NIT/CC: ${cliente?.nit_cc || "(no indicado)"}`,
+        `Dirección: ${cliente?.direccion || "(no indicada)"}`,
+        "",
+        "OBJETO DEL CONTRATO:",
+        objetivo,
+        "",
+        "Instrucciones:",
+        "- Genera entre 4 y 6 consideraciones, cada una como párrafo independiente.",
+        "- Cada párrafo debe comenzar con un ordinal en MAYÚSCULAS seguido de dos puntos: PRIMERO:, SEGUNDO:, TERCERO:, CUARTO:, etc.",
+        "- Redacta en tono formal y jurídico; 2 a 3 oraciones por consideración, breves y coherentes entre sí.",
+        "- Cubre, en orden lógico: la necesidad del CONTRATANTE de contratar los servicios; la capacidad legal y solvencia del CONTRATISTA para prestarlos; que la relación es de naturaleza las partes libres y autónoma, sin vínculo laboral; el objeto concreto del contrato; y, de ser pertinente, la experiencia e idoneidad del CONTRATISTA.",
+        "- No menciones montos, fechas ni datos ajenos a los indicados.",
+        "- No incluyas el título 'CONSIDERACIONES' ni etiquetas ni texto adicional.",
+        "- Separa cada consideración con una línea en blanco.",
+        "",
+        "CONSIDERACIONES:"
+    ].join("\n");
+
+    return llamarGemini(prompt, 0.5);
+}
+
+module.exports = { adaptarClausula, generarObjetivoGeneral, generarConsideraciones };

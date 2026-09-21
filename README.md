@@ -187,6 +187,7 @@ Todas las rutas protegidas requieren el encabezado `Authorization: Bearer <token
 | `GET` | `/clausulas` | Catálogo de cláusulas | Autenticado |
 | `POST` | `/ia/adaptar-clausula` | Adapta una cláusula según el objeto | Autenticado |
 | `POST` | `/ia/objetivo-general` | Genera un título corto a partir de la descripción | Autenticado |
+| `POST` | `/ia/consideraciones` | Genera las consideraciones del contrato según el objeto y el cliente | Autenticado |
 
 ---
 
@@ -226,6 +227,7 @@ La asistencia de IA se apoya en la API de Google Gemini y se expone mediante dos
 
 - **Adaptar cláusula** (`POST /ia/adaptar-clausula`): recibe el título, el contenido y el objeto del contrato, y devuelve la cláusula redactada en función de ese contexto.
 - **Objetivo general** (`POST /ia/objetivo-general`): a partir de la descripción, devuelve una frase corta en mayúsculas para el título del contrato.
+- **Consideraciones** (`POST /ia/consideraciones`): genera los recitales (CONSIDERANDOS) del contrato a partir del objeto y de los datos del cliente; el resultado se muestra en un campo editable para ajustarlo antes de incluirlo en el documento.
 
 Consideraciones:
 - Si la clave no está configurada, el servicio responde `503`.
