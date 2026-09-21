@@ -251,7 +251,7 @@ function templateCrear() {
 
                     <div class="panel panel-clausulas" id="panel-clausulas" hidden>
                         <h2 class="panel-titulo">Cláusulas del contrato</h2>
-                        <p class="panel-descripcion">Marca o desmarca las cláusulas que quieras incluir. Al desmarcar una, el resto se renumera por orden de selección.</p>
+                        <p class="panel-descripcion">Marca o desmarca las cláusulas que quieras incluir: se numera 1, 2, 3... en orden de lista y se agregan tras el preámbulo. Usa "IA" para adaptar una cláusula al objetivo del contrato y "Editar" para modificar su texto; ambos cambios solo aplican a este contrato.</p>
                         <div class="clausulas-lista" id="clausulas-lista"></div>
                     </div>
                 </section>
@@ -287,6 +287,30 @@ function templateCrear() {
                 <button type="button" class="btn-generar" id="btn-generar">Generar contrato</button>
             </div>
         </section>
+
+        <div class="modal-vista" id="modal-editar-clausula" hidden>
+            <div class="modal-contenido modal-contenido-clausula">
+                <div class="modal-encabezado">
+                    <h2 class="panel-titulo">Editar cláusula</h2>
+                    <button type="button" class="modal-cerrar" id="btn-cerrar-editar-clausula" aria-label="Cerrar">&times;</button>
+                </div>
+                <p class="panel-descripcion">Los cambios solo se aplican al contrato que estás generando; no se guardan en la base de datos.</p>
+                <form id="formulario-editar-clausula">
+                    <div class="campo-formulario campo-completo">
+                        <label for="clausula-editar-titulo">Título</label>
+                        <input type="text" id="clausula-editar-titulo">
+                    </div>
+                    <div class="campo-formulario campo-completo">
+                        <label for="clausula-editar-contenido">Contenido</label>
+                        <textarea id="clausula-editar-contenido" rows="14" placeholder="Escribe el contenido de la cláusula. Separa los párrafos con una línea en blanco."></textarea>
+                    </div>
+                    <div class="acciones-formulario">
+                        <button type="submit" class="btn-guardar">Guardar cambios</button>
+                        <button type="button" class="btn-cancelar" id="btn-cancelar-editar-clausula">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     `;
 }
 
@@ -675,23 +699,17 @@ function initCrear() {
     const previewHtml = document.getElementById("preview-html");
     const panelClausulas = document.getElementById("panel-clausulas");
     const clausulasLista = document.getElementById("clausulas-lista");
+    const modalEditarClausula = document.getElementById("modal-editar-clausula");
+    const formularioEditarClausula = document.getElementById("formulario-editar-clausula");
+    const clausulaEditarTitulo = document.getElementById("clausula-editar-titulo");
+    const clausulaEditarContenido = document.getElementById("clausula-editar-contenido");
+    const btnCerrarEditarClausula = document.getElementById("btn-cerrar-editar-clausula");
+    const btnCancelarEditarClausula = document.getElementById("btn-cancelar-editar-clausula");
 
     let temporizadorBusqueda = null;
     let plantillaHtmlCruda = "";
     let clausulas = [];
-
-    const ORDINALES_CLAUSULA = ["", "PRIMERA", "SEGUNDA", "TERCERA", "CUARTA", "QUINTA", "SEXTA",
-        "SÉPTIMA", "OCTAVA", "NOVENA", "DÉCIMA", "DÉCIMA PRIMERA", "DÉCIMA SEGUNDA", "DÉCIMA TERCERA",
-        "DÉCIMA CUARTA", "DÉCIMA QUINTA", "DÉCIMA SEXTA", "DÉCIMA SÉPTIMA", "DÉCIMA OCTAVA",
-        "DÉCIMA NOVENA", "VIGÉSIMA", "VIGÉSIMA PRIMERA", "VIGÉSIMA SEGUNDA", "VIGÉSIMA TERCERA",
-        "VIGÉSIMA CUARTA", "VIGÉSIMA QUINTA", "VIGÉSIMA SEXTA", "VIGÉSIMA SÉPTIMA", "VIGÉSIMA OCTAVA",
-        "VIGÉSIMA NOVENA", "TRIGÉSIMA", "TRIGÉSIMA PRIMERA", "TRIGÉSIMA SEGUNDA", "TRIGÉSIMA TERCERA",
-        "TRIGÉSIMA CUARTA", "TRIGÉSIMA QUINTA", "TRIGÉSIMA SEXTA", "TRIGÉSIMA SÉPTIMA", "TRIGÉSIMA OCTAVA",
-        "TRIGÉSIMA NOVENA", "CUADRAGÉSIMA", "CUADRAGÉSIMA PRIMERA"];
-
-    function ordinalClausula(n) {
-        return ORDINALES_CLAUSULA[n] || String(n);
-    }
+    let clausulaEnEdicion = null;
 
     async function buscar(termino) {
         resultados.innerHTML = '<p class="servicio-busqueda">Buscando...</p>';
@@ -881,6 +899,24 @@ function initCrear() {
         return div.innerHTML;
     }
 
+    function htmlATexto(html) {
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        doc.querySelectorAll("script, style").forEach((nodo) => nodo.remove());
+        return doc.body.innerText.replace(/\n{3,}/g, "\n\n").trim();
+    }
+
+    function textoAHTML(texto) {
+        const bloques = String(texto || "").split(/\n{2,}/);
+        const parrafos = bloques
+            .map((bloque) => bloque.replace(/\s*\n\s*/g, " ").trim())
+            .filter(Boolean);
+        return parrafos.map((p) => `<p>${escaparHTML(p)}</p>`).join("");
+    }
+
+    function clausulaSoportaIA(clausula) {
+        return /frente|par[aá]grafo/i.test(clausula.titulo + " " + clausula.contenido);
+    }
+
     function formatearMoneda(valor) {
         const numero = parseFloat(valor);
         if (isNaN(numero)) return "";
@@ -956,13 +992,9 @@ function initCrear() {
         panelClausulas.hidden = false;
         clausulasLista.innerHTML = "";
 
-        const seleccionadas = clausulas.filter((c) => c.seleccionada);
-
         clausulas.forEach((clausula) => {
-            const posicion = seleccionadas.indexOf(clausula) + 1;
-
-            const etiqueta = document.createElement("label");
-            etiqueta.className = "clausula-item" + (clausula.seleccionada ? "" : " clausula-no-seleccionada");
+            const item = document.createElement("div");
+            item.className = "clausula-item" + (clausula.seleccionada ? "" : " clausula-no-seleccionada");
 
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
@@ -980,18 +1012,125 @@ function initCrear() {
 
             const numero = document.createElement("span");
             numero.className = "clausula-numero";
-            if (clausula.seleccionada) {
-                numero.textContent = ordinalClausula(posicion);
-                numero.title = `Posición ${posicion} en el contrato`;
-            } else {
+            if (!clausula.seleccionada) {
                 numero.textContent = "No incluida";
             }
 
-            etiqueta.appendChild(checkbox);
-            etiqueta.appendChild(titulo);
-            etiqueta.appendChild(numero);
-            clausulasLista.appendChild(etiqueta);
+            const acciones = document.createElement("div");
+            acciones.className = "clausula-acciones";
+
+            if (clausulaSoportaIA(clausula)) {
+                const btnIA = document.createElement("button");
+                btnIA.type = "button";
+                btnIA.className = "btn-accion-clausula btn-ia";
+                btnIA.textContent = "IA";
+                btnIA.title = "Adaptar con IA según el objetivo del contrato";
+                btnIA.addEventListener("click", () => adaptarConIA(clausula, btnIA));
+                acciones.appendChild(btnIA);
+            }
+
+            const btnEditar = document.createElement("button");
+            btnEditar.type = "button";
+            btnEditar.className = "btn-accion-clausula btn-editar";
+            btnEditar.textContent = "Editar";
+            btnEditar.title = "Editar el texto de la cláusula (solo para este contrato)";
+            btnEditar.addEventListener("click", () => abrirEdicionClausula(clausula));
+            acciones.appendChild(btnEditar);
+
+            item.appendChild(checkbox);
+            item.appendChild(titulo);
+            item.appendChild(numero);
+            item.appendChild(acciones);
+            clausulasLista.appendChild(item);
         });
+    }
+
+    function abrirEdicionClausula(clausula) {
+        clausulaEnEdicion = clausula;
+        clausulaEditarTitulo.value = clausula.titulo;
+        clausulaEditarContenido.value = htmlATexto(clausula.contenido);
+        modalEditarClausula.hidden = false;
+        modalEditarClausula.tabIndex = -1;
+        modalEditarClausula.focus();
+    }
+
+    function cerrarEdicionClausula() {
+        modalEditarClausula.hidden = true;
+        clausulaEnEdicion = null;
+    }
+
+    formularioEditarClausula.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (!clausulaEnEdicion) return;
+
+        const titulo = clausulaEditarTitulo.value.trim();
+        const contenido = textoAHTML(clausulaEditarContenido.value);
+
+        if (!titulo || !contenido) {
+            mostrarToast("El título y el contenido no pueden quedar vacíos", "error");
+            return;
+        }
+
+        clausulaEnEdicion.titulo = titulo;
+        clausulaEnEdicion.contenido = contenido;
+        cerrarEdicionClausula();
+        renderListaClausulas();
+        renderizarPreviewConDatos();
+        mostrarToast("Cláusula editada (solo para este contrato)", "exito");
+    });
+
+    btnCerrarEditarClausula.addEventListener("click", cerrarEdicionClausula);
+    btnCancelarEditarClausula.addEventListener("click", cerrarEdicionClausula);
+
+    modalEditarClausula.addEventListener("click", (e) => {
+        if (e.target === modalEditarClausula) cerrarEdicionClausula();
+    });
+    modalEditarClausula.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") cerrarEdicionClausula();
+    });
+
+    async function adaptarConIA(clausula, boton) {
+        const objetivo = contratoDescripcion.value.trim();
+        if (!objetivo) {
+            mostrarToast("Escribe el objetivo en 'Descripción / Objeto del contrato' antes de usar la IA", "error");
+            return;
+        }
+
+        const textoOriginal = boton.textContent;
+        boton.disabled = true;
+        boton.textContent = "Analizando...";
+
+        try {
+            const respuesta = await fetch(`${API_URL}/ia/adaptar-clausula`, {
+                method: "POST",
+                headers: { ...obtenerHeaders(), "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    titulo: clausula.titulo,
+                    contenido: htmlATexto(clausula.contenido),
+                    objetivo
+                })
+            });
+
+            if (!respuesta.ok) {
+                const error = await respuesta.json().catch(() => null);
+                throw new Error(error?.mensaje || "Error al adaptar la cláusula");
+            }
+
+            const datos = await respuesta.json();
+            const texto = (datos.texto || "").trim();
+            if (!texto) throw new Error("La IA no devolvió contenido");
+
+            clausula.contenido = textoAHTML(texto);
+            renderListaClausulas();
+            renderizarPreviewConDatos();
+            mostrarToast("Cláusula adaptada con IA (solo para este contrato)", "exito");
+
+        } catch (error) {
+            mostrarToast(error.message, "error");
+        } finally {
+            boton.disabled = false;
+            boton.textContent = textoOriginal;
+        }
     }
 
     function construirHtmlContrato() {
@@ -1005,7 +1144,7 @@ function initCrear() {
         const seleccionadas = clausulas.filter((c) => c.seleccionada);
 
         const cuerpo = seleccionadas.map((clausula, posicion) =>
-            `<p><strong>CLÁUSULA ${ordinalClausula(posicion + 1)}. ${escaparHTML(clausula.titulo)}:</strong> ${clausula.contenido}`
+            `<p><strong>CLÁUSULA ${posicion + 1}. ${escaparHTML(clausula.titulo)}:</strong> ${clausula.contenido}`
         ).join("");
 
         return preambulo + cuerpo;
