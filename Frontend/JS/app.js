@@ -110,15 +110,15 @@ function templateInicio() {
                 <table>
                     <thead>
                         <tr>
-                            <th>No. contrato</th>
-                            <th>Cliente</th>
-                            <th>Fecha</th>
-                            <th>Estado</th>
+                            <th>No.</th>
+                            <th>Documento</th>
+                            <th>Fecha de creación</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpo-contratos">
                         <tr class="fila-vacia">
-                            <td colspan="4">Aún no hay contratos registrados</td>
+                            <td colspan="4">Cargando contratos...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -319,7 +319,7 @@ function templateHistorial() {
     return `
         <header class="encabezado">
             <h1 class="titulo-pagina">Historial de contratos</h1>
-            <p class="subtitulo">Consulta todos los contratos registrados en detalle</p>
+            <p class="subtitulo">Documentos guardados en tu carpeta "Contratos generados" de Google Drive</p>
         </header>
 
         <section class="estadisticas">
@@ -328,16 +328,16 @@ function templateHistorial() {
                 <span class="estadistica-nombre">Total de contratos</span>
             </div>
             <div class="tarjeta-estadistica">
-                <span class="estadistica-valor" id="activos-contratos">0</span>
-                <span class="estadistica-nombre">Activos</span>
+                <span class="estadistica-valor" id="hoy-contratos">0</span>
+                <span class="estadistica-nombre">Creados hoy</span>
             </div>
             <div class="tarjeta-estadistica">
-                <span class="estadistica-valor" id="vencidos-contratos">0</span>
-                <span class="estadistica-nombre">Vencidos</span>
+                <span class="estadistica-valor" id="semana-contratos">0</span>
+                <span class="estadistica-nombre">Últimos 7 días</span>
             </div>
             <div class="tarjeta-estadistica">
-                <span class="estadistica-valor" id="finalizados-contratos">0</span>
-                <span class="estadistica-nombre">Finalizados</span>
+                <span class="estadistica-valor" id="mes-contratos">0</span>
+                <span class="estadistica-nombre">Este mes</span>
             </div>
         </section>
 
@@ -347,33 +347,23 @@ function templateHistorial() {
             </div>
 
             <div class="herramientas">
-                <input type="text" id="buscador" class="campo-busqueda" placeholder="Buscar contrato, cliente o estado...">
-                <select id="filtro-estado" class="filtro-estado">
-                    <option value="">Todos los estados</option>
-                    <option value="Activo">Activo</option>
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Vencido">Vencido</option>
-                    <option value="Finalizado">Finalizado</option>
-                </select>
+                <input type="text" id="buscador" class="campo-busqueda" placeholder="Buscar contrato o cliente...">
             </div>
 
             <div class="historial-tabla">
                 <table>
                     <thead>
                         <tr>
-                            <th>No. contrato</th>
-                            <th>Cliente</th>
-                            <th>Tipo de contrato</th>
+                            <th>No.</th>
+                            <th>Documento</th>
+                            <th>Tamaño</th>
                             <th>Fecha de creación</th>
-                            <th>Fecha de vencimiento</th>
-                            <th>Monto</th>
-                            <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpo-contratos">
                         <tr class="fila-vacia">
-                            <td colspan="8">Aún no hay contratos registrados</td>
+                            <td colspan="5">Cargando contratos...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -687,7 +677,90 @@ const TEMPLATES = {
     admin: templateAdmin
 };
 
+function formatearTamaño(bytes) {
+    const n = Number(bytes);
+    if (!n || n <= 0) return "—";
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatearFecha(iso) {
+    if (!iso) return "—";
+    const fecha = new Date(iso);
+    return fecha.toLocaleDateString("es-CO", {
+        day: "2-digit", month: "long", year: "numeric"
+    }) + " · " + fecha.toLocaleTimeString("es-CO", {hour: "2-digit", minute: "2-digit"});
+}
+
+function crearBotonAbrir(contrato) {
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "btn-abrir";
+    boton.textContent = "Abrir en Drive";
+    boton.addEventListener("click", () => {
+        if (contrato.webViewLink) window.open(contrato.webViewLink, "_blank");
+    });
+    return boton;
+}
+
+async function obtenerContratos() {
+    const respuesta = await fetch(`${API_URL}/contratos`, {headers: obtenerHeaders()});
+    if (!respuesta.ok) {
+        const error = await respuesta.json().catch(() => null);
+        throw new Error(error?.mensaje || "No se pudo cargar el historial");
+    }
+    return respuesta.json();
+}
+
 function initInicio() {
+    const tablero = document.getElementById("cuerpo-contratos");
+    const contador = document.getElementById("contador-contratos");
+    if (!tablero) return;
+
+    async function cargarHistorialInicio() {
+        try {
+            const contratos = await obtenerContratos();
+            const recientes = contratos.slice(0, 5);
+
+            contador.textContent = `${contratos.length} ${contratos.length === 1 ? "contrato" : "contratos"}`;
+            tablero.innerHTML = "";
+
+            if (recientes.length === 0) {
+                tablero.innerHTML = '<tr class="fila-vacia"><td colspan="4">Aún no hay contratos en la carpeta de Drive. Genera tu primer contrato en \'Crear\'.</td></tr>';
+                return;
+            }
+
+            recientes.forEach((contrato, indice) => {
+                const fila = document.createElement("tr");
+
+                const numero = document.createElement("td");
+                numero.textContent = indice + 1;
+
+                const doc = document.createElement("td");
+                doc.textContent = contrato.name || "Sin nombre";
+
+                const fecha = document.createElement("td");
+                fecha.textContent = formatearFecha(contrato.createdTime);
+
+                const acciones = document.createElement("td");
+                acciones.appendChild(crearBotonAbrir(contrato));
+
+                fila.appendChild(numero);
+                fila.appendChild(doc);
+                fila.appendChild(fecha);
+                fila.appendChild(acciones);
+
+                tablero.appendChild(fila);
+            });
+
+        } catch (error) {
+            if (contador) contador.textContent = "—";
+            tablero.innerHTML = `<tr class="fila-vacia"><td colspan="4">${error.message}</td></tr>`;
+        }
+    }
+
+    cargarHistorialInicio();
 }
 
 function initCrear() {
@@ -1523,31 +1596,96 @@ function initCrear() {
 
 function initHistorial() {
     const buscador = document.getElementById("buscador");
-    const filtroEstado = document.getElementById("filtro-estado");
     const tablero = document.getElementById("cuerpo-contratos");
+    const totalEl = document.getElementById("total-contratos");
+    const hoyEl = document.getElementById("hoy-contratos");
+    const semanaEl = document.getElementById("semana-contratos");
+    const mesEl = document.getElementById("mes-contratos");
 
-    buscador.addEventListener("input", filtrar);
-    filtroEstado.addEventListener("change", filtrar);
+    let contratos = [];
 
-    function filtrar() {
-        const termino = buscador.value.trim().toLowerCase();
-        const estadoSeleccionado = filtroEstado.value;
+    function renderizarContratos(lista) {
+        tablero.innerHTML = "";
 
-        const filas = tablero.querySelectorAll("tr");
-        filas.forEach((fila) => {
-            if (fila.classList.contains("fila-vacia")) return;
+        if (lista.length === 0) {
+            const filaVacia = document.createElement("tr");
+            filaVacia.className = "fila-vacia";
+            filaVacia.innerHTML = '<td colspan="5">' + (contratos.length === 0
+                ? "Aún no hay contratos en la carpeta de Drive. Genera tu primer contrato en la sección 'Crear'."
+                : "No se encontraron contratos con ese término.") + "</td>";
+            tablero.appendChild(filaVacia);
+            return;
+        }
 
-            const textoFila = fila.textContent.toLowerCase();
-            const badge = fila.querySelector(".estado-badge");
-            if (!badge) return;
-            const estadoFila = badge.textContent;
+        lista.forEach((contrato, indice) => {
+            const fila = document.createElement("tr");
 
-            const coincideBusqueda = textoFila.includes(termino);
-            const coincideEstado = !estadoSeleccionado || estadoFila === estadoSeleccionado;
+            const numero = document.createElement("td");
+            numero.textContent = indice + 1;
 
-            fila.style.display = coincideBusqueda && coincideEstado ? "" : "none";
+            const doc = document.createElement("td");
+            doc.textContent = contrato.name || "Sin nombre";
+
+            const tamaño = document.createElement("td");
+            tamaño.textContent = formatearTamaño(contrato.size);
+
+            const fecha = document.createElement("td");
+            fecha.textContent = formatearFecha(contrato.createdTime);
+
+            const acciones = document.createElement("td");
+            acciones.appendChild(crearBotonAbrir(contrato));
+
+            fila.appendChild(numero);
+            fila.appendChild(doc);
+            fila.appendChild(tamaño);
+            fila.appendChild(fecha);
+            fila.appendChild(acciones);
+
+            tablero.appendChild(fila);
         });
     }
+
+    function aplicarFiltros() {
+        const termino = buscador.value.trim().toLowerCase();
+        const filtrados = contratos.filter((c) =>
+            !termino || (c.name || "").toLowerCase().includes(termino)
+        );
+        renderizarContratos(filtrados);
+    }
+
+    function calcularEstadisticas() {
+        const ahora = new Date();
+        const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate()).getTime();
+        const inicioSemana = hoy - 6 * 24 * 60 * 60 * 1000;
+        const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1).getTime();
+
+        let hoyC = 0, semanaC = 0, mesC = 0;
+        contratos.forEach((c) => {
+            const t = c.createdTime ? new Date(c.createdTime).getTime() : 0;
+            if (!t) return;
+            if (t >= hoy) hoyC++;
+            if (t >= inicioSemana) semanaC++;
+            if (t >= inicioMes) mesC++;
+        });
+
+        totalEl.textContent = contratos.length;
+        hoyEl.textContent = hoyC;
+        semanaEl.textContent = semanaC;
+        mesEl.textContent = mesC;
+    }
+
+    async function cargarHistorial() {
+        try {
+            contratos = await obtenerContratos();
+            calcularEstadisticas();
+            aplicarFiltros();
+        } catch (error) {
+            tablero.innerHTML = `<tr class="fila-vacia"><td colspan="5">${error.message}</td></tr>`;
+        }
+    }
+
+    buscador.addEventListener("input", aplicarFiltros);
+    cargarHistorial();
 }
 
 function initAdmin() {

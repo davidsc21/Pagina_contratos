@@ -205,11 +205,26 @@ async function crearDocumentoGoogle({nombre, html}) {
     return res.data;
 }
 
+async function listarContratos() {
+    const d = obtenerDrive();
+    if (!d) throw new Error(configError || "Google Drive no configurado");
+
+    const res = await d.files.list({
+        q: `'${FOLDER_CONTRATOS_ID}' in parents and trashed = false`,
+        fields: "files(id, name, mimeType, size, createdTime, webViewLink)",
+        orderBy: "createdTime desc",
+        pageSize: 500
+    });
+
+    return res.data.files || [];
+}
+
 module.exports = {
     listarPlantillas,
     obtenerMetadatos,
     obtenerContenido,
     crearDocumentoGoogle,
+    listarContratos,
     obtenerErrorConfig,
     generarUrlAutorizacion,
     guardarTokenDesdeCodigo,

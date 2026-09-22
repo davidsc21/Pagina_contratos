@@ -1,4 +1,25 @@
-const { crearDocumentoGoogle } = require("../Services/googleDrive");
+const { crearDocumentoGoogle, listarContratos, obtenerErrorConfig } = require("../Services/googleDrive");
+
+async function listarContratosCtrl(req, res) {
+    try {
+        const error = obtenerErrorConfig();
+        if (error) return res.status(500).json({mensaje: error});
+
+        const archivos = await listarContratos();
+        return res.json(archivos);
+    } catch (error) {
+        console.error("Error listando contratos:", error.message);
+
+        let mensaje = error.message || "Error al consultar los contratos en Drive";
+        if (/quota|no storage quota|storage/i.test(String(error.message))) {
+            mensaje = "La cuenta conectada no tiene espacio disponible en Google Drive.";
+        } else if (/notFound|permission|403|forbidden/i.test(String(error.message))) {
+            mensaje = "No se pudo acceder a la carpeta 'Contratos generados'. Revisa que exista y que la cuenta de Google tenga acceso.";
+        }
+
+        return res.status(500).json({mensaje});
+    }
+}
 
 async function generarContrato(req, res) {
     try {
@@ -35,4 +56,4 @@ async function generarContrato(req, res) {
     }
 }
 
-module.exports = { generarContrato };
+module.exports = { generarContrato, listarContratosCtrl };
