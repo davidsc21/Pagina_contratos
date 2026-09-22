@@ -39,7 +39,9 @@ Sistema web para la **generación automatizada de contratos** a partir de planti
 - **Asistencia con IA (Google Gemini)**:
   - Adaptación de cláusulas según el objeto del contrato.
   - Generación automática de un título corto a partir de la descripción.
+  - Generación de las consideraciones (CONSIDERANDOS) del contrato.
   - Las modificaciones hechas con IA o de forma manual aplican **solo al contrato en pantalla**, nunca al catálogo almacenado.
+- **Generación directa en Google Drive**: con la cuenta de Google del usuario, el contrato armado se crea como **documento de Google** en la carpeta "Contratos generados".
 - **Historial** de contratos generados.
 
 ---
@@ -60,7 +62,7 @@ Sistema web para la **generación automatizada de contratos** a partir de planti
 - Aplicación de una sola página (SPA) con enrutamiento por hash
 
 **Servicios externos**
-- Google Drive (plantillas de contratos)
+- Google Drive (plantillas de contratos y generación del documento final)
 - Google Gemini (asistencia con IA)
 
 ---
@@ -94,8 +96,10 @@ Pagina_contratos/
 
 - Node.js 18 o superior
 - PostgreSQL 14 o superior
-- Una **cuenta de servicio de Google** con acceso a la carpeta de Drive que contiene las plantillas
+- Una **cuenta de Google** (personal) conectada mediante **OAuth** con acceso a las carpetas de Drive de plantillas y de contratos
 - Una **clave de API de Google Gemini** (Google AI Studio)
+
+> La cuenta de servicio es opcional y se usa solo como respaldo para consultar plantillas; la generación de contratos requiere la conexión OAuth de una cuenta personal con cuota.
 
 ---
 
@@ -120,6 +124,14 @@ JWT_SECRET=una_clave_larga_y_segura
 # Google Drive
 GOOGLE_SERVICE_ACCOUNT_PATH=./config/service-account-key.json
 GOOGLE_DRIVE_FOLDER_ID=id_de_la_carpeta_de_plantillas
+GOOGLE_DRIVE_CONTRATOS_FOLDER_ID=id_de_la_carpeta_de_contratos
+
+# Google OAuth (cuenta personal para generar contratos)
+# Crear el ID de cliente OAuth (aplicación web) en Google Cloud Console con:
+#   URI de redireccionamiento -> http://localhost:3000/auth/google/callback
+GOOGLE_OAUTH_CLIENT_ID=tu_client_id
+GOOGLE_OAUTH_CLIENT_SECRET=tu_client_secret
+GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3000/auth/google/callback
 
 # Google Gemini
 GEMINI_API_KEY=tu_api_key
@@ -188,6 +200,10 @@ Todas las rutas protegidas requieren el encabezado `Authorization: Bearer <token
 | `POST` | `/ia/adaptar-clausula` | Adapta una cláusula según el objeto | Autenticado |
 | `POST` | `/ia/objetivo-general` | Genera un título corto a partir de la descripción | Autenticado |
 | `POST` | `/ia/consideraciones` | Genera las consideraciones del contrato según el objeto y el cliente | Autenticado |
+| `POST` | `/contratos` | Crea el documento final en Google Drive (devuelve id y enlace) | Autenticado |
+| `GET` | `/auth/google` | URL de autorización OAuth para conectar la cuenta de Google | Autenticado |
+| `GET` | `/auth/google/callback` | Callback de OAuth (recibe el código y guarda el token) | Público |
+| `GET` | `/auth/google/estado` | Estado de la conexión con Google (conectado / correo) | Autenticado |
 
 ---
 
@@ -217,7 +233,16 @@ UPDATE usuarios SET rol = 'admin' WHERE correo = 'usuario@correo.com';
 4. **Selección de cláusulas**: las cláusulas del catálogo se marcan para incluirlas; el orden de la lista define su numeración.
 5. **Armado del documento**: la plantilla contiene una cláusula de objeto fija, las cláusulas legales numeradas y un punto de inserción donde se agregan las cláusulas adicionales.
 6. **Vista previa** en tiempo real, con opción de editar o adaptar cada cláusula con IA.
-7. **Generación / descarga** del contrato final.
+7. **Generación** del contrato final: se crea un documento de Google en la carpeta "Contratos generados" de la cuenta conectada (OAuth).
+
+### Conexión con Google Drive (OAuth)
+
+1. En **Google Cloud Console → APIs y servicios → Credenciales** crea un **ID de cliente OAuth** (aplicación web).
+2. En el flujo de consentimiento agrega tu correo como **usuario de prueba**.
+3. Pega `ID de cliente` y `Secreto del cliente` en `Backend/.env`.
+4. En la app: **Administrar → Conexión Google → Conectar con Google** y autoriza con tu cuenta.
+
+Con la cuenta conectada, los documentos de contrato se crean a tu nombre (usando su cuota), no con la cuenta de servicio.
 
 ---
 
@@ -238,6 +263,7 @@ Consideraciones:
 ## Seguridad
 
 - Las credenciales se gestionan mediante variables de entorno y **no se versionan**.
+- El token OAuth de Google se guarda en `Backend/config/drive-token.json`, **excluido del repositorio**
 - Las contraseñas se almacenan cifradas con `bcrypt`.
 - El acceso a los recursos se controla con JWT y un middleware de rol para administradores.
 - Si una credencial se expone accidentalmente, debe **rotarse de inmediato**.
@@ -246,6 +272,7 @@ Consideraciones:
 
 ## Roadmap
 
+- [x] Conexión con Google Drive mediante OAuth (cuenta personal)
 - [ ] Persistencia del historial de contratos generados
 - [ ] Exportación directa a `.docx` / PDF
 - [ ] Pruebas automatizadas (backend y frontend)

@@ -5,11 +5,49 @@ require("dotenv").config();
 
 const RUTA_CREDENCIALES = process.env.GOOGLE_SERVICE_ACCOUNT_PATH;
 const FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
+const FOLDER_CONTRATOS_ID = process.env.GOOGLE_DRIVE_CONTRATOS_FOLDER_ID || "1ipvNm0ODa_hshBJMziid_D4POdq7l9ni";
+
+const OAUTH_CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID;
+const OAUTH_CLIENT_SECRET = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+const OAUTH_REDIRECT_URI = process.env.GOOGLE_OAUTH_REDIRECT_URI || "http://localhost:3000/auth/google/callback";
+const RUTA_TOKEN_OAUTH = path.resolve(__dirname, "..", "config", "drive-token.json");
 
 let drive = null;
 let configError = null;
 
+function crearClienteOAuth() {
+    if (!OAUTH_CLIENT_ID || !OAUTH_CLIENT_SECRET) return null;
+    return new google.auth.OAuth2(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REDIRECT_URI);
+}
+
+function leerTokenOAuth() {
+    try {
+        if (fs.existsSync(RUTA_TOKEN_OAUTH)) {
+            const datos = JSON.parse(fs.readFileSync(RUTA_TOKEN_OAUTH, "utf8"));
+            return datos.refresh_token ? datos : null;
+        }
+    } catch (e) {
+        console.error("No se pudo leer el token de OAuth:", e.message);
+    }
+    return null;
+}
+
+function reiniciarDrive() {
+    drive = null;
+}
+
 function inicializarDrive() {
+    // 1) Cuenta personal (OAuth): permite leer plantillas y crear contratos sin límite de cuota
+    const token = leerTokenOAuth();
+    const cliente = crearClienteOAuth();
+    if (token && cliente) {
+        cliente.setCredentials(token);
+        drive = google.drive({version: "v3", auth: cliente});
+        configError = null;
+        return drive;
+    }
+
+    // 2) Fallback: cuenta de servicio (útil solo para lectura de plantillas)
     if (!RUTA_CREDENCIALES || !FOLDER_ID) {
         configError = "Faltan las variables GOOGLE_SERVICE_ACCOUNT_PATH o GOOGLE_DRIVE_FOLDER_ID en el .env";
         return null;
@@ -39,6 +77,57 @@ function obtenerDrive() {
 function obtenerErrorConfig() {
     if (!drive) inicializarDrive();
     return configError;
+}
+
+function generarUrlAutorizacion() {
+    const cliente = crearClienteOAuth();
+    if (!cliente) {
+        throw new Error("Faltan GOOGLE_OAUTH_CLIENT_ID o GOOGLE_OAUTH_CLIENT_SECRET en el .env");
+    }
+    return cliente.generateAuthUrl({
+        access_type: "offline",
+        prompt: "consent",
+        scope: [
+            "https://www.googleapis.com/auth/drive",
+            "https://www.googleapis.com/auth/userinfo.email"
+        ]
+    });
+}
+
+async function guardarTokenDesdeCodigo(code) {
+    const cliente = crearClienteOAuth();
+    if (!cliente) throw new Error("Faltan credenciales OAuth en el .env");
+
+    const {tokens} = await cliente.getToken(code);
+    if (!tokens.refresh_token) {
+        throw new Error("No se obtuvo el token de actualización. Autoriza de nuevo.");
+    }
+    cliente.setCredentials(tokens);
+
+    let correo = "";
+    try {
+        const oauth2 = google.oauth2({version: "v2", auth: cliente});
+        const info = await oauth2.userinfo.get();
+        correo = info.data.email || "";
+    } catch (e) {
+        // el correo es informativo; no bloqueamos
+    }
+
+    fs.mkdirSync(path.dirname(RUTA_TOKEN_OAUTH), {recursive: true});
+    fs.writeFileSync(RUTA_TOKEN_OAUTH, JSON.stringify({...tokens, correo}, null, 2));
+    reiniciarDrive();
+
+    return {...tokens, correo};
+}
+
+function informacionConexion() {
+    const token = leerTokenOAuth();
+    const configurada = !!(OAUTH_CLIENT_ID && OAUTH_CLIENT_SECRET);
+    return {
+        conectado: configurada && !!token,
+        configurada,
+        correo: token ? token.correo || "" : ""
+    };
 }
 
 async function listarPlantillas() {
@@ -96,4 +185,33 @@ async function obtenerContenido(fileId) {
     throw new Error(`Formato no soportado: ${mime}`);
 }
 
-module.exports = {listarPlantillas, obtenerMetadatos, obtenerContenido, obtenerErrorConfig};
+async function crearDocumentoGoogle({nombre, html}) {
+    const d = obtenerDrive();
+    if (!d) throw new Error(configError || "Google Drive no configurado");
+
+    const res = await d.files.create({
+        requestBody: {
+            name: nombre,
+            mimeType: "application/vnd.google-apps.document",
+            parents: [FOLDER_CONTRATOS_ID]
+        },
+        media: {
+            mimeType: "text/html",
+            body: html
+        },
+        fields: "id, name, mimeType, webViewLink"
+    });
+
+    return res.data;
+}
+
+module.exports = {
+    listarPlantillas,
+    obtenerMetadatos,
+    obtenerContenido,
+    crearDocumentoGoogle,
+    obtenerErrorConfig,
+    generarUrlAutorizacion,
+    guardarTokenDesdeCodigo,
+    informacionConexion
+};
