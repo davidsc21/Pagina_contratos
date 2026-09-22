@@ -144,11 +144,6 @@ function templateCrear() {
                 <span class="paso-numero">2</span>
                 <span class="paso-nombre">Datos del contrato</span>
             </div>
-            <div class="paso-linea"></div>
-            <div class="paso via-paso" id="paso-boton-3" data-paso="3">
-                <span class="paso-numero">3</span>
-                <span class="paso-nombre">Revisión</span>
-            </div>
         </nav>
 
         <section class="contenido-paso" id="paso-contenido-1">
@@ -269,9 +264,6 @@ function templateCrear() {
                 <aside class="contrato-preview">
                     <div class="preview-contenedor">
                         <h3 class="preview-titulo" id="preview-titulo">Vista previa del contrato</h3>
-                        <div class="preview-generar" id="preview-generar" hidden>
-                            <button type="button" class="btn-generar-drive" id="btn-generar-drive">Generar contrato en Google Drive</button>
-                        </div>
                         <div class="preview-html" id="preview-html">
                             <p class="servicio-busqueda">Selecciona una plantilla para ver su contenido</p>
                         </div>
@@ -281,23 +273,19 @@ function templateCrear() {
 
             <div class="pie-paso">
                 <button type="button" class="btn-return" data-paso="1">&#8592; Volver</button>
-                <button type="button" class="btn-continuar" data-paso="3">Continuar al paso 3</button>
+                <button type="button" class="btn-generar-drive" id="btn-generar-drive" disabled>Generar contrato en Google Drive</button>
             </div>
         </section>
 
-        <section class="contenido-paso" id="paso-contenido-3" hidden>
-            <div class="panel">
-                <h2 class="panel-titulo">Revisión</h2>
-                <p class="panel-descripcion">Aquí se resumirá el contrato antes de generarlo</p>
-                <div class="construccion">
-                    <span class="construccion-icono">&#9888;</span>
-                    <p>Esta sección está en construcción</p>
+        <section class="contenido-generado" id="contenido-generado" hidden>
+            <div class="panel generado-panel">
+                <span class="generado-icono">&#10004;</span>
+                <h2 class="panel-titulo">Contrato generado</h2>
+                <p class="panel-descripcion">El documento se creó correctamente en tu carpeta "Contratos generados" en Google Drive.</p>
+                <div class="generado-acciones">
+                    <button type="button" class="btn-generar-otro" id="btn-generar-otro">Generar otro contrato</button>
+                    <button type="button" class="btn-return" id="btn-volver-inicio">Volver al inicio</button>
                 </div>
-            </div>
-
-            <div class="pie-paso">
-                <button type="button" class="btn-return" data-paso="2">&#8592; Volver</button>
-                <button type="button" class="btn-generar" id="btn-generar">Generar contrato</button>
             </div>
         </section>
 
@@ -732,8 +720,10 @@ function initCrear() {
     const consideracionesBloque = document.getElementById("consideraciones-bloque");
     const consideracionesTexto = document.getElementById("consideraciones-texto");
     const btnGenerarDrive = document.getElementById("btn-generar-drive");
-    const previewGenerar = document.getElementById("preview-generar");
     const previewTitulo = document.getElementById("preview-titulo");
+    const contenidoGenerado = document.getElementById("contenido-generado");
+    const btnGenerarOtro = document.getElementById("btn-generar-otro");
+    const btnVolverInicio = document.getElementById("btn-volver-inicio");
     const previewHtml = document.getElementById("preview-html");
     const panelClausulas = document.getElementById("panel-clausulas");
     const clausulasLista = document.getElementById("clausulas-lista");
@@ -750,6 +740,7 @@ function initCrear() {
     let clausulaEnEdicion = null;
     let objetivoGeneral = "";
     let consideracionesGeneradas = "";
+    let htmlContratoActual = "";
 
     async function buscar(termino) {
         resultados.innerHTML = '<p class="servicio-busqueda">Buscando...</p>';
@@ -868,12 +859,13 @@ function initCrear() {
         contratoDescripcion.value = "";
         plantillaHtmlCruda = "";
         clausulas = [];
+        htmlContratoActual = "";
         objetivoGeneral = "";
         objetivoGeneralTexto.textContent = "";
         consideracionesGeneradas = "";
         consideracionesTexto.value = "";
         consideracionesBloque.hidden = true;
-        previewGenerar.hidden = true;
+        btnGenerarDrive.disabled = true;
         panelClausulas.hidden = true;
         clausulasLista.innerHTML = "";
 
@@ -961,6 +953,8 @@ function initCrear() {
     function limpiarPlantilla() {
         plantillaHtmlCruda = "";
         clausulas = [];
+        htmlContratoActual = "";
+        btnGenerarDrive.disabled = true;
         renderListaClausulas();
         previewTitulo.textContent = "Vista previa del contrato";
         previewHtml.innerHTML = '<p class="servicio-busqueda">Selecciona una plantilla para ver su contenido</p>';
@@ -985,6 +979,7 @@ function initCrear() {
 
         } catch (error) {
             plantillaHtmlCruda = "";
+            btnGenerarDrive.disabled = true;
             previewHtml.innerHTML = `<p class="servicio-busqueda">${error.message}</p>`;
         }
     }
@@ -1347,7 +1342,7 @@ function initCrear() {
     });
 
     async function generarContratoEnDrive() {
-        const html = previewHtml.innerHTML;
+        const html = htmlContratoActual || previewHtml.innerHTML;
         if (!html || !plantillaHtmlCruda) {
             mostrarToast("Primero selecciona una plantilla y completa los datos", "error");
             return;
@@ -1382,6 +1377,8 @@ function initCrear() {
             const datos = await respuesta.json();
             mostrarToast("Contrato generado en Google Drive", "exito");
             if (datos.webViewLink) window.open(datos.webViewLink, "_blank");
+            document.querySelectorAll(".pasos, .contenido-paso").forEach((el) => el.hidden = true);
+            contenidoGenerado.hidden = false;
 
         } catch (error) {
             mostrarToast(error.message, "error");
@@ -1392,6 +1389,8 @@ function initCrear() {
     }
 
     btnGenerarDrive.addEventListener("click", generarContratoEnDrive);
+    btnGenerarOtro.addEventListener("click", () => navegar("crear"));
+    btnVolverInicio.addEventListener("click", () => navegar("inicio"));
 
     function construirHtmlContrato() {
         if (!plantillaHtmlCruda) return "";
@@ -1447,7 +1446,8 @@ function initCrear() {
         });
 
         previewHtml.innerHTML = resultado;
-        previewGenerar.hidden = false;
+        htmlContratoActual = resultado;
+        btnGenerarDrive.disabled = false;
     }
 
     contratoTipo.addEventListener("change", () => {

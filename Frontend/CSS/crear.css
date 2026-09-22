@@ -266,6 +266,8 @@
 
 .btn-continuar,
 .btn-generar,
+.btn-generar-drive,
+.btn-generar-otro,
 .btn-return {
   padding: 0.7rem 1.6rem;
   border-radius: 8px;
@@ -277,18 +279,23 @@
 }
 
 .btn-continuar,
-.btn-generar {
+.btn-generar,
+.btn-generar-drive,
+.btn-generar-otro {
   background-color: var(--green-dark);
   color: #ffffff;
   border: none;
 }
 
 .btn-continuar:hover,
-.btn-generar:hover {
+.btn-generar:hover,
+.btn-generar-drive:hover,
+.btn-generar-otro:hover {
   background-color: var(--green-darker);
 }
 
-.btn-continuar:disabled {
+.btn-continuar:disabled,
+.btn-generar-drive:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -302,6 +309,41 @@
 .btn-return:hover {
   border-color: var(--green-dark);
   color: var(--green-dark);
+}
+
+/* ============ CONTRATO GENERADO ============ */
+.contenido-generado {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.generado-panel {
+  max-width: 560px;
+  text-align: center;
+  padding: 2.5rem 2rem;
+}
+
+.generado-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 50%;
+  background-color: var(--green-light);
+  color: var(--green-darker);
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.generado-acciones {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.4rem;
 }
 
 /* ============ PASO 2: FORMULARIO + VISTA PREVIA ============ */
@@ -596,33 +638,6 @@
   margin-bottom: 0.2rem;
 }
 
-.preview-generar {
-  margin-bottom: 0.9rem;
-  text-align: right;
-}
-
-.btn-generar-drive {
-  padding: 0.55rem 1.1rem;
-  border: none;
-  background-color: var(--green-darker);
-  color: #ffffff;
-  border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.15s ease;
-}
-
-.btn-generar-drive:hover {
-  opacity: 0.9;
-}
-
-.btn-generar-drive:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
 .conexion-google {
   margin-top: 0.8rem;
 }
@@ -743,5 +758,8 @@
   .pie-paso { flex-direction: column; }
   .pie-paso .btn-continuar,
   .pie-paso .btn-generar,
-  .pie-paso .btn-return { width: 100%; }
+  .pie-paso .btn-generar-drive,
+  .pie-paso .btn-return,
+  .generado-acciones .btn-generar-otro,
+  .generado-acciones .btn-return { width: 100%; }
 }
