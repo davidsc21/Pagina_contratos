@@ -32,9 +32,9 @@ app.use("/contratos", contratosRoutes);
 app.get("/health", async (req, res) => {
     try {
         const resultado = await pool.query("SELECT NOW()");
-        res.json({ estado: "ok", fecha: resultado.rows[0].now, postgres: true });
+        res.json({ estado: "ok", fecha: resultado.rows[0].now, postgres: true, version: process.env.RENDER_GIT_COMMIT || "dev" });
     } catch (error) {
-        res.status(500).json({ estado: "error", postgres: false, mensaje: error.message });
+        res.status(500).json({ estado: "error", postgres: false, version: process.env.RENDER_GIT_COMMIT || "dev", mensaje: error.message });
     }
 });
 
