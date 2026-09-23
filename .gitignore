@@ -5,6 +5,9 @@ node_modules/
 Backend/config/
 *.env
 
+# Respaldo de base de datos (contiene datos reales)
+Backend/scripts/backup_contratos.sql
+
 # Logs
 *.log
 

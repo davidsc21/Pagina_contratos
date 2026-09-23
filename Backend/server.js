@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const pool = require("./Databases/db");
 const usuariosRoutes = require("./Routes/usuarios");
 const authRoutes = require("./Routes/auth");
@@ -14,6 +15,7 @@ require("dotenv").config();
 
 const app = express();
 
+app.set("trust proxy", 1);
 app.use(cors());
 app.use(express.json());
 
@@ -27,31 +29,21 @@ app.use("/clausulas", clausulasRoutes);
 app.use("/ia", iaRoutes);
 app.use("/contratos", contratosRoutes);
 
+app.get("/health", async (req, res) => {
+    try {
+        const resultado = await pool.query("SELECT NOW()");
+        res.json({ estado: "ok", fecha: resultado.rows[0].now, postgres: true });
+    } catch (error) {
+        res.status(500).json({ estado: "error", postgres: false, mensaje: error.message });
+    }
+});
+
+const FRONTEND_DIR = process.env.FRONTEND_DIR || path.join(__dirname, "..", "Frontend");
+app.use(express.static(FRONTEND_DIR));
+
 app.use((err, req, res, next) => {
     console.error("ERROR NO MANEJADO:", err);
     res.status(500).json({ mensaje: "Error interno del servidor" });
-});
-
-app.get("/", async (req, res) => {
-    try {
-
-        const resultado = await pool.query("SELECT NOW()");
-
-        res.json({
-            mensaje: "Conexión exitosa con PostgreSQL",
-            fecha: resultado.rows[0]
-        });
-
-    } catch (error) {
-
-    console.error("ERROR:", error);
-
-    res.status(500).json({
-        mensaje: error.message
-    });
-
-}
-    
 });
 
 const PORT = process.env.PORT || 3000;

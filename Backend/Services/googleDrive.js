@@ -1,6 +1,7 @@
 const {google} = require("googleapis");
 const fs = require("fs");
 const path = require("path");
+const pool = require("../Databases/db");
 require("dotenv").config();
 
 const RUTA_CREDENCIALES = process.env.GOOGLE_SERVICE_ACCOUNT_PATH;
@@ -20,7 +21,35 @@ function crearClienteOAuth() {
     return new google.auth.OAuth2(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REDIRECT_URI);
 }
 
-function leerTokenOAuth() {
+async function guardarTokensEnDb(tokens) {
+    try {
+        await pool.query(
+            `INSERT INTO config_google (id, tokens)
+             VALUES (1, $1)
+             ON CONFLICT (id) DO UPDATE SET tokens = EXCLUDED.tokens`,
+            [JSON.stringify(tokens)]
+        );
+        return true;
+    } catch (e) {
+        console.warn("No se pudo guardar el token en la base de datos:", e.message);
+        return false;
+    }
+}
+
+async function leerTokensDeDb() {
+    try {
+        const resultado = await pool.query("SELECT tokens FROM config_google WHERE id = 1");
+        const tokens = resultado.rows[0]?.tokens;
+        return tokens && tokens.refresh_token ? tokens : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+async function leerTokenOAuth() {
+    const deDb = await leerTokensDeDb();
+    if (deDb) return deDb;
+
     try {
         if (fs.existsSync(RUTA_TOKEN_OAUTH)) {
             const datos = JSON.parse(fs.readFileSync(RUTA_TOKEN_OAUTH, "utf8"));
@@ -36,9 +65,9 @@ function reiniciarDrive() {
     drive = null;
 }
 
-function inicializarDrive() {
+async function inicializarDrive() {
     // 1) Cuenta personal (OAuth): permite leer plantillas y crear contratos sin límite de cuota
-    const token = leerTokenOAuth();
+    const token = await leerTokenOAuth();
     const cliente = crearClienteOAuth();
     if (token && cliente) {
         cliente.setCredentials(token);
@@ -69,17 +98,17 @@ function inicializarDrive() {
     return drive;
 }
 
-function obtenerDrive() {
-    if (!drive) inicializarDrive();
+async function obtenerDrive() {
+    if (!drive) await inicializarDrive();
     return drive;
 }
 
-function obtenerErrorConfig() {
-    if (!drive) inicializarDrive();
+async function obtenerErrorConfig() {
+    if (!drive) await inicializarDrive();
     return configError;
 }
 
-function generarUrlAutorizacion() {
+function generarUrlAutorizacion(redirectUri) {
     const cliente = crearClienteOAuth();
     if (!cliente) {
         throw new Error("Faltan GOOGLE_OAUTH_CLIENT_ID o GOOGLE_OAUTH_CLIENT_SECRET en el .env");
@@ -87,6 +116,7 @@ function generarUrlAutorizacion() {
     return cliente.generateAuthUrl({
         access_type: "offline",
         prompt: "consent",
+        redirect_uri: redirectUri || OAUTH_REDIRECT_URI,
         scope: [
             "https://www.googleapis.com/auth/drive",
             "https://www.googleapis.com/auth/userinfo.email"
@@ -94,11 +124,11 @@ function generarUrlAutorizacion() {
     });
 }
 
-async function guardarTokenDesdeCodigo(code) {
+async function guardarTokenDesdeCodigo(code, redirectUri) {
     const cliente = crearClienteOAuth();
     if (!cliente) throw new Error("Faltan credenciales OAuth en el .env");
 
-    const {tokens} = await cliente.getToken(code);
+    const {tokens} = await cliente.getToken({code, redirect_uri: redirectUri || OAUTH_REDIRECT_URI});
     if (!tokens.refresh_token) {
         throw new Error("No se obtuvo el token de actualización. Autoriza de nuevo.");
     }
@@ -115,13 +145,14 @@ async function guardarTokenDesdeCodigo(code) {
 
     fs.mkdirSync(path.dirname(RUTA_TOKEN_OAUTH), {recursive: true});
     fs.writeFileSync(RUTA_TOKEN_OAUTH, JSON.stringify({...tokens, correo}, null, 2));
+    await guardarTokensEnDb(tokens);
     reiniciarDrive();
 
     return {...tokens, correo};
 }
 
-function informacionConexion() {
-    const token = leerTokenOAuth();
+async function informacionConexion() {
+    const token = await leerTokenOAuth();
     const configurada = !!(OAUTH_CLIENT_ID && OAUTH_CLIENT_SECRET);
     return {
         conectado: configurada && !!token,
@@ -131,7 +162,7 @@ function informacionConexion() {
 }
 
 async function listarPlantillas() {
-    const d = obtenerDrive();
+    const d = await obtenerDrive();
     if (!d) throw new Error(configError || "Google Drive no configurado");
 
     const res = await d.files.list({
@@ -144,7 +175,7 @@ async function listarPlantillas() {
 }
 
 async function obtenerMetadatos(fileId) {
-    const d = obtenerDrive();
+    const d = await obtenerDrive();
     if (!d) throw new Error(configError || "Google Drive no configurado");
 
     const meta = await d.files.get({fileId, fields: "id, name, mimeType"});
@@ -152,7 +183,7 @@ async function obtenerMetadatos(fileId) {
 }
 
 async function obtenerContenido(fileId) {
-    const d = obtenerDrive();
+    const d = await obtenerDrive();
     if (!d) throw new Error(configError || "Google Drive no configurado");
 
     const meta = await obtenerMetadatos(fileId);
@@ -186,7 +217,7 @@ async function obtenerContenido(fileId) {
 }
 
 async function crearDocumentoGoogle({nombre, html}) {
-    const d = obtenerDrive();
+    const d = await obtenerDrive();
     if (!d) throw new Error(configError || "Google Drive no configurado");
 
     const res = await d.files.create({
@@ -206,7 +237,7 @@ async function crearDocumentoGoogle({nombre, html}) {
 }
 
 async function listarContratos() {
-    const d = obtenerDrive();
+    const d = await obtenerDrive();
     if (!d) throw new Error(configError || "Google Drive no configurado");
 
     const res = await d.files.list({

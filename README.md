@@ -174,6 +174,65 @@ El servidor queda disponible en `http://localhost:3000`.
 
 Sirve la carpeta `Frontend/` con cualquier servidor estático (por ejemplo, la extensión *Live Server*) y abre `login.html` para iniciar sesión.
 
+> El backend ya incluye el servicio estático del frontend (`express.static`), por lo que en producción no se necesita un servidor aparte: un solo proceso sirve toda la aplicación.
+
+---
+
+## Publicación en la nube (Render + Supabase)
+
+La aplicación está preparada para funcionar 24/7 desde la nube:
+
+- **Render** (plan gratuito) sirve backend + frontend como un solo proceso Node.
+- **Supabase** aloja la base de datos PostgreSQL.
+
+### 1. Subir el código a GitHub
+
+```bash
+git add .
+git commit -m "feat: :rocket: preparar despliegue en la nube"
+git push
+```
+
+### 2. Crear la base de datos en Supabase
+
+1. Crea un proyecto en [database.new](https://database.new).
+2. Abre **SQL Editor → New query** y pega todo el contenido de `Backend/scripts/backup_contratos.sql` (exporta el esquema y los datos actuales) y ejecútalo.
+3. Copia la **connection string** (Project Settings → Database) con la contraseña.
+
+### 3. Crear el servicio web en Render
+
+1. Entra a [render.com](https://render.com) → **New → Web Service** → conecta el repositorio de GitHub.
+2. Si usas el `render.yaml` incluido, Render detecta el servicio automáticamente; o configura manualmente:
+   - Root directory: `Backend`
+   - Build: `npm install`
+   - Start: `npm start`
+3. En **Environment**, completa:
+   - `DATABASE_URL`: la connection string de Supabase
+   - `JWT_SECRET`: una clave larga y segura
+   - `GEMINI_API_KEY`: tu clave de Gemini
+   - `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`: tus credenciales OAuth
+   - `GOOGLE_DRIVE_FOLDER_ID`: carpeta de plantillas
+   - `GOOGLE_DRIVE_CONTRATOS_FOLDER_ID`: carpeta "Contratos generados"
+   - `NODE_ENV=production` y `FRONTEND_DIR=../Frontend` (ya vienen en el `render.yaml`)
+
+### 4. Ajustes en Google Cloud Console
+
+1. En el **cliente OAuth**, agrega como URI de redireccionamiento autorizado:
+   ```
+   https://TU-APP.onrender.com/auth/google/callback
+   ```
+   (mantén también `http://localhost:3000/auth/google/callback` para desarrollo).
+2. En **Pantalla de consentimiento**, cambia el estado de publicación a **En producción** (en modo Prueba el token de actualización caduca a los 7 días).
+
+### 5. Conectar Google Drive en la app publicada
+
+Tras el despliegue, entra a la página → **Administrar → Conexión Google → Conectar con Google** y autoriza con tu cuenta. El token se guarda en la base de datos, por lo que **sobrevive a cada despliegue**.
+
+### Notas del plan gratuito
+
+- Render (gratis): la app se duerme tras ~15 min de inactividad y la primera visita tarda ~30-60 s en arrancar. Con actividad normal se mantiene siempre despierta.
+- Supabase (gratis): el proyecto se pausa tras ~1 semana sin actividad; el uso de la app lo mantiene activo.
+
 ---
 
 ## API REST

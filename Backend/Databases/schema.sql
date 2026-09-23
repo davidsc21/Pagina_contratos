@@ -55,6 +55,18 @@ CREATE TABLE IF NOT EXISTS plantillas (
 );
 
 -- ============================================================
+-- Token de OAuth de Google (cuenta personal que genera contratos)
+-- Se guarda en la base de datos para que sobreviva a los despliegues
+-- de la app en la nube (el disco del servidor es efímero).
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS config_google (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    tokens JSONB,
+    actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================================
 -- Para crear un usuario administrador ejecuta:
 --
 --   UPDATE usuarios SET rol = 'admin'

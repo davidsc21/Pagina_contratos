@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: pagina-contratos
+    runtime: node
+    plan: free
+    rootDir: Backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_DIR
+        value: ../Frontend
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash
+      # Las siguientes se completan en el panel de Render (registro manual)
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_DRIVE_FOLDER_ID
+        sync: false
+      - key: GOOGLE_DRIVE_CONTRATOS_FOLDER_ID
+        sync: false

@@ -22,8 +22,9 @@ const obtenerTiposContrato = async (req, res) => {
 
 const obtenerPlantillas = async (req, res) => {
     try {
-        if (obtenerErrorConfig()) {
-            return res.status(503).json({mensaje: obtenerErrorConfig()});
+        const errorConfig = await obtenerErrorConfig();
+        if (errorConfig) {
+            return res.status(503).json({mensaje: errorConfig});
         }
 
         const {tipo} = req.query;
@@ -67,8 +68,9 @@ const obtenerContenidoPlantilla = async (req, res) => {
     const {id} = req.params;
 
     try {
-        if (obtenerErrorConfig()) {
-            return res.status(503).json({mensaje: obtenerErrorConfig()});
+        const errorConfig = await obtenerErrorConfig();
+        if (errorConfig) {
+            return res.status(503).json({mensaje: errorConfig});
         }
 
         const contenido = await obtenerContenido(id);

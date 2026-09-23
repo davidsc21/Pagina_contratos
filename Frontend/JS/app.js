@@ -1,4 +1,8 @@
-const API_URL = "http://localhost:3000";
+const API_URL = (() => {
+    const servidoPorBackend = location.protocol !== "file:"
+        && (location.hostname !== "localhost" || location.port === "3000");
+    return servidoPorBackend ? location.origin : "http://localhost:3000";
+})();
 const ADMIN = "admin";
 
 const contenido = document.getElementById("contenido");
@@ -394,11 +398,6 @@ function templateAdmin() {
                 <span class="paso-numero">&#9776;</span>
                 <span class="paso-nombre">Administrar clientes</span>
             </div>
-            <div class="paso-linea"></div>
-            <div class="paso via-paso" id="tab-admin-conexion" data-tab="admin-conexion">
-                <span class="paso-numero">&#9881;</span>
-                <span class="paso-nombre">Conexión Google</span>
-            </div>
         </nav>
 
         <p id="mensaje-admin" class="mensaje-admin" hidden></p>
@@ -651,19 +650,6 @@ function templateAdmin() {
                             </tr>
                         </tbody>
                     </table>
-                </div>
-            </section>
-        </section>
-
-        <!-- TAB: CONEXIÓN GOOGLE -->
-        <section class="admin-seccion" id="seccion-admin-conexion" hidden>
-            <section class="panel panel-formulario">
-                <h2 class="panel-titulo">Conexión con Google Drive</h2>
-                <p class="panel-descripcion">Conecta tu cuenta personal de Google: así los contratos generados se crean directamente en tu carpeta "Contratos generados" como documentos de Google.</p>
-                <div class="conexion-google">
-                    <p class="conexion-estado" id="conexion-estado">Verificando conexión...</p>
-                    <button type="button" class="btn-conectar-google" id="btn-conectar-google" hidden>Conectar con Google</button>
-                    <button type="button" class="btn-conectar-google btn-reconectar" id="btn-reconectar-google" hidden>Reconectar cuenta</button>
                 </div>
             </section>
         </section>
@@ -2216,64 +2202,9 @@ function initAdmin() {
         cargarClientes();
     }
 
-    async function adminConexion() {
-        const estadoEl = document.getElementById("conexion-estado");
-        const btnConectar = document.getElementById("btn-conectar-google");
-        const btnReconectar = document.getElementById("btn-reconectar-google");
-
-        async function cargarEstado() {
-            try {
-                const respuesta = await fetch(`${API_URL}/auth/google/estado`, {headers: obtenerHeaders()});
-                if (!respuesta.ok) throw new Error("No se pudo consultar el estado");
-                const datos = await respuesta.json();
-
-                if (!datos.configurada) {
-                    estadoEl.textContent = "Configura GOOGLE_OAUTH_CLIENT_ID y GOOGLE_OAUTH_CLIENT_SECRET en Backend/.env para habilitar la conexión.";
-                    btnConectar.hidden = true;
-                    btnReconectar.hidden = true;
-                    return;
-                }
-                if (datos.conectado) {
-                    estadoEl.textContent = datos.correo
-                        ? `Conectado como ${datos.correo}. Los contratos se crearán en tu carpeta "Contratos generados".`
-                        : "Cuenta conectada. Los contratos se crearán en tu carpeta \"Contratos generados\".";
-                    btnConectar.hidden = true;
-                    btnReconectar.hidden = false;
-                } else {
-                    estadoEl.textContent = "Aún no has conectado tu cuenta de Google.";
-                    btnConectar.hidden = false;
-                    btnReconectar.hidden = true;
-                }
-            } catch (error) {
-                estadoEl.textContent = error.message;
-            }
-        }
-
-        async function conectar() {
-            try {
-                const respuesta = await fetch(`${API_URL}/auth/google`, {headers: obtenerHeaders()});
-                if (!respuesta.ok) {
-                    const error = await respuesta.json().catch(() => null);
-                    throw new Error(error?.mensaje || "No se pudo iniciar la conexión");
-                }
-                const datos = await respuesta.json();
-                window.open(datos.url, "_blank");
-            } catch (error) {
-                estadoEl.textContent = error.message;
-            }
-        }
-
-        btnConectar.addEventListener("click", conectar);
-        btnReconectar.addEventListener("click", conectar);
-        cargarEstado();
-
-        window.addEventListener("focus", cargarEstado);
-    }
-
     crearUsuario();
     adminUsuarios();
     adminClientes();
-    adminConexion();
 }
 
 const INITIALIZERS = {

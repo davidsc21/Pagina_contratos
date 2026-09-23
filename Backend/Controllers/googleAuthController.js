@@ -1,8 +1,12 @@
 const googleDrive = require("../Services/googleDrive");
 
+function construirRedirectUri(req) {
+    return `${req.protocol}://${req.get("host")}/auth/google/callback`;
+}
+
 function iniciarAuthGoogle(req, res) {
     try {
-        const url = googleDrive.generarUrlAutorizacion();
+        const url = googleDrive.generarUrlAutorizacion(construirRedirectUri(req));
         return res.json({url});
     } catch (error) {
         console.error("Error generando URL de autorización:", error.message);
@@ -26,7 +30,7 @@ async function callbackGoogle(req, res) {
     }
 
     try {
-        const datos = await googleDrive.guardarTokenDesdeCodigo(code);
+        const datos = await googleDrive.guardarTokenDesdeCodigo(code, construirRedirectUri(req));
         return res.send(htmlRespuesta(
             "Cuenta conectada",
             `Google Drive quedó conectado${datos.correo ? ` con ${datos.correo}` : ""}. Ya puedes cerrar esta ventana y volver a la aplicación.`,
@@ -42,8 +46,9 @@ async function callbackGoogle(req, res) {
     }
 }
 
-function estadoGoogle(req, res) {
-    return res.json(googleDrive.informacionConexion());
+async function estadoGoogle(req, res) {
+    const estado = await googleDrive.informacionConexion();
+    return res.json(estado);
 }
 
 function htmlRespuesta(titulo, mensaje, tipo) {

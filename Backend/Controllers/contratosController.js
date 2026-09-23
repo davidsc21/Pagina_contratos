@@ -2,7 +2,7 @@ const { crearDocumentoGoogle, listarContratos, obtenerErrorConfig } = require(".
 
 async function listarContratosCtrl(req, res) {
     try {
-        const error = obtenerErrorConfig();
+        const error = await obtenerErrorConfig();
         if (error) return res.status(500).json({mensaje: error});
 
         const archivos = await listarContratos();

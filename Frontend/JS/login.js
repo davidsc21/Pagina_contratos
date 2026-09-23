@@ -1,3 +1,9 @@
+const API_URL = (() => {
+    const servidoPorBackend = location.protocol !== "file:"
+        && (location.hostname !== "localhost" || location.port === "3000");
+    return servidoPorBackend ? location.origin : "http://localhost:3000";
+})();
+
 const formulario = document.getElementById("login-form");
 const mensajeDiv = document.getElementById("mensaje");
 
@@ -19,7 +25,7 @@ formulario.addEventListener("submit", async (event) => {
     }
 
     try {
-        const respuesta = await fetch("http://localhost:3000/auth/login", {
+        const respuesta = await fetch(`${API_URL}/auth/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
