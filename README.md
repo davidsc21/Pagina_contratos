@@ -226,7 +226,7 @@ git push
 
 ### 5. Conectar Google Drive en la app publicada
 
-Tras el despliegue, entra a la página → **Administrar → Conexión Google → Conectar con Google** y autoriza con tu cuenta. El token se guarda en la base de datos, por lo que **sobrevive a cada despliegue**.
+Tras el despliegue, entra a la página → **Inicio → panel "Conexión Google Drive" → Conectar con Google** (visible solo para administradores) y autoriza con tu cuenta. El token se guarda en la base de datos (tabla `config_google`), por lo que **sobrevive a cada despliegue**.
 
 ### Notas del plan gratuito
 
